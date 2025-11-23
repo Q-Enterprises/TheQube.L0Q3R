@@ -1,0 +1,38 @@
+{
+  "receipt_id": "world.os.genesis.v1.propagate",
+  "schema": "WORLD_OS_ENGINE.PROTOCOL.PROPAGATION",
+  "version": "v\u03a9.0.0",
+  "capsule_ref": "world.os.genesis.v1.capsule.json",
+  "capsule_seal": "world.os.genesis.v1.seal.json",
+  "routing": {
+    "distribution_mode": "federated_append",
+    "target_nodes": [
+      "ChronoSync.Nexus",
+      "Caelum-X.Relay01",
+      "Hadean.VerityArray",
+      "Sol.F1.NodeZero"
+    ],
+    "protocols": [
+      "https",
+      "ledgercast",
+      "sha256_stream"
+    ],
+    "receipt_format": "deterministic/jcs+sha256"
+  },
+  "ledger_proof": {
+    "local_ledger_path": "./ledger.jsonl",
+    "entry_count": 1,
+    "latest_capsule_sha256": "sha256:8e8d53234a2c37412bf6999f45f964d9843328121aff1cd815f3909533a5809c",
+    "entry_position": 1,
+    "verification_protocol": "ledger.fs.sync+entry.hash",
+    "audit_token": "GENESIS:PRIME"
+  },
+  "verification": {
+    "expected_self_hash": "sha256:8e8d53234a2c37412bf6999f45f964d9843328121aff1cd815f3909533a5809c",
+    "expected_seal_signature": "sig512:PENDING",
+    "cross_node_verification_required": true,
+    "ledger_append_verified": true,
+    "multinode_integrity_level": "STRONG"
+  },
+  "timestamp_utc": "2025-11-14T12:10:01Z"
+}

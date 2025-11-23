@@ -1,0 +1,33 @@
+{
+  "capsule_id": "world.os.genesis.v1",
+  "project_id": "GENESIS_V1",
+  "protocol_version": "vΩ.0.0",
+  "mode": "simulation",
+  "artifact": {
+    "name": "scene genesis",
+    "description": "Canonical ultra-photorealistic genesis packet aligned with ZERO-DRIFT mandate.",
+    "hash": {
+      "algorithm": "sha256",
+      "value": "50c3ea92afba7f45dc8accc083ac4e34b6f7d91e21e0dff6f4b02873af4f7d9a"
+    }
+  },
+  "integrity": {
+    "primary_record": "WORLD_OS_ENGINE.PROTOCOL.vΩ.0.0",
+    "drift_delta": "<= 1e-6",
+    "canonical_match": true,
+    "compliance_threshold": {
+      "observed": 1.000,
+      "minimum": 0.999
+    },
+    "trust_score": 100.0
+  },
+  "status": {
+    "integrity_verified": true,
+    "canonical_lock_in": "confirmed",
+    "timestamp": "2025-11-14T00:00:00Z"
+  },
+  "next_actions": [
+    "Append capsule to WORLD_OS ledger",
+    "Replicate artifact across ZERO-DRIFT mirrors"
+  ]
+}
