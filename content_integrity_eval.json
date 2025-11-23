@@ -1,0 +1,68 @@
+{
+  "service_id": "content.integrity.eval.v1",
+  "version": "1.1.0",
+  "zero_drift": true,
+  "description": "Ethical Content Integrity Evaluation (CIE-V1) using neutral perturbation models for robustness audits.",
+  "compliance": {
+    "neutral_perturbation_models": true,
+    "audit_trail": "cie_runbook_stub.md",
+    "last_reviewed": "2024-02-14",
+    "ethics_domain": "AMW"
+  },
+  "deployment_state": {
+    "world_os_anchor": "WORLD_OS_INFINITE_GAME_DEPLOYED",
+    "sovereign_status": "finalized",
+    "integrity_layers": [
+      "Proof (QRH Lock)",
+      "Flow (Governed Stability)",
+      "Execution (Operational Fidelity)"
+    ],
+    "seal": "APEX-SEAL"
+  },
+  "modules": [
+    {
+      "module_id": "synthetic.noise.injector.v1",
+      "role": "Generates neutral perturbations across text, audio, and vision payloads without introducing semantic bias.",
+      "inputs": ["content_payload", "integrity_profile"],
+      "outputs": ["perturbed_payload"],
+      "parameters": {
+        "distribution": "zero-mean gaussian",
+        "max_perturbation": 0.12,
+        "seed_mode": "deterministic"
+      }
+    },
+    {
+      "module_id": "synthetic.contradiction.synth.v1",
+      "role": "Synthesizes neutral contradictions to challenge factual assertions while respecting ethical guardrails.",
+      "inputs": ["perturbed_payload", "knowledge_base"],
+      "outputs": ["challenge_set"],
+      "parameters": {
+        "logic_layer": "paraconsistent",
+        "max_contradictions": 8,
+        "guardrail_profile": "cie_v1_ethics"
+      }
+    }
+  ],
+  "pipelines": [
+    {
+      "name": "cie_v1_audit",
+      "stages": [
+        "ingest_payload",
+        "synthetic.noise.injector.v1",
+        "synthetic.contradiction.synth.v1",
+        "integrity_scorecard"
+      ]
+    }
+  ],
+  "telemetry": {
+    "metrics": [
+      "perturbation_energy",
+      "contradiction_density",
+      "zero_drift_score"
+    ],
+    "logging": {
+      "level": "INFO",
+      "sink": "logs/cie_v1/"
+    }
+  }
+}
