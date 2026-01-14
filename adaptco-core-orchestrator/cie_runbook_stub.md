@@ -31,6 +31,15 @@ The Content Integrity Evaluation Service (CIE-V1) enforces ZERO-DRIFT analysis u
 - Stream metrics `perturbation_energy`, `contradiction_density`, and `zero_drift_score` to the observability sink `logs/cie_v1/`.
 - All logs must include the audit ID and seed for reproducibility.
 
+## Inaugural Audit Inputs (Required)
+Define the first official CIE-V1 audit run with the following inputs:
+- **audit_id:** Immutable identifier for the run (e.g., `cie-v1-0001`).
+- **content_payload:** The payload under evaluation with modality metadata (text/audio/vision).
+- **integrity_profile:** Constraints and thresholds for neutrality and drift (e.g., `cie_v1_baseline`).
+- **knowledge_base:** Authorized references for contradiction synthesis (e.g., `kb/neutral_corpus_v1`).
+- **seed:** Deterministic seed to ensure reproducibility.
+Capture these inputs in the audit console before executing the `cie_v1_audit` pipeline.
+
 ## Escalation
 - If perturbation energy exceeds threshold, pause the audit and notify the Ethics Supervisor.
 - For contradiction synthesis anomalies, route to the Neutrality Council triage queue.
