@@ -43,6 +43,18 @@
       }
     }
   ],
+  "audit_inputs": {
+    "required_fields": [
+      "audit_id",
+      "payload_uri",
+      "integrity_profile",
+      "seed_u64",
+      "knowledge_base_ref"
+    ],
+    "seed_format": "u64_string",
+    "deterministic": true,
+    "notes": "All inputs must be immutable and referenced by content addressable URIs to preserve zero-drift guarantees."
+  },
   "pipelines": [
     {
       "name": "cie_v1_audit",
