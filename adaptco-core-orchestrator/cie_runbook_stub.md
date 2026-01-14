@@ -39,3 +39,16 @@ The Content Integrity Evaluation Service (CIE-V1) enforces ZERO-DRIFT analysis u
 - Define input schema for the inaugural CIE-V1 audit run.
 - Schedule calibration sweep for both synthetic modules using archived payloads.
 - Publish the deployment confirmation to the World Engine ledger and archive the ZERO-DRIFT attestation packet as `world.os.genesis.v1.capsule.json`.
+
+## Inaugural Audit Input Definition
+Use the following input manifest for the first official CIE-V1 audit run. All identifiers must be stable and content-addressed.
+
+```json
+{
+  "audit_id": "cie_v1_0001",
+  "payload_uri": "hash://payloads/sha256/<payload_hash>",
+  "integrity_profile": "cie_v1_ethics",
+  "seed_u64": "18446744073709551615",
+  "knowledge_base_ref": "hash://knowledge/sha256/<kb_hash>"
+}
+```
