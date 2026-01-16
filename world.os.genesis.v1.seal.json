@@ -1,0 +1,29 @@
+{
+  "seal_id": "world.os.genesis.v1.seal",
+  "schema": "WORLD_OS_ENGINE.PROTOCOL.SEAL",
+  "version": "v\u03a9.0.0",
+  "capsule_ref": "world.os.genesis.v1.capsule.json",
+  "capsule_sha256": "sha256:7424382c4135e5657a7f60d50eaa736119afe90de636c2a3ce524d8a1a72eb18",
+  "sealed_utc": "2025-11-14T12:07:19Z",
+  "validator": {
+    "suzerain": "Supralogic.\u0394Alpha",
+    "role": "Prime Notary",
+    "region": "CoreVault.F1",
+    "instrument": "FSYNC+JCS+SHA256",
+    "signature": {
+      "type": "sha512",
+      "sig_placeholder": "sig512:PENDING"
+    }
+  },
+  "ledger_snapshot": {
+    "ledger_path": "./ledger.jsonl",
+    "entry_hash": "sha256:45f4aa4c6aa00996cf3ea7cb70b998afc81ecb7f15529ad70d8361c1555f1bc1",
+    "position": "1"
+  },
+  "integrity": {
+    "jcs_canonical": true,
+    "entropy_drift": 0.0,
+    "capsule_verified": true,
+    "ledger_append_verified": true
+  }
+}

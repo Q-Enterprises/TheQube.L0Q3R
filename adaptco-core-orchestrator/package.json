@@ -1,0 +1,20 @@
+{
+  "name": "adaptco-core-orchestrator",
+  "version": "1.0.0",
+  "description": "Core orchestrator for AdaptCo services including CIE-V1",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "audit": "node src/audit.js"
+  },
+  "keywords": [
+    "orchestrator",
+    "cie-v1",
+    "audit"
+  ],
+  "author": "AdaptCo",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.0"
+  }
+}
