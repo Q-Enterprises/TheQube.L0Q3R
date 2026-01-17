@@ -5,11 +5,30 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python Debugger: Flask",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "flask",
+            "env": {
+                "FLASK_APP": "propagate_genesis.py",
+                "FLASK_DEBUG": "1"
+            },
+            "args": [
+                "run",
+                "--no-debugger",
+                "--no-reload"
+            ],
+            "jinja": true,
+            "autoStartBrowser": false
+        },
+        {
             "name": "Attach to Chrome",
             "port": 9222,
             "request": "attach",
             "type": "chrome",
-            "webRoot": "${workspaceFolder}"
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}",
+            "preLaunchTask": "Build container"
         },
         {
             "type": "java",
