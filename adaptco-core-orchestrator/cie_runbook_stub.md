@@ -45,9 +45,17 @@ Capture these inputs in the audit console before executing the `cie_v1_audit` pi
 - For contradiction synthesis anomalies, route to the Neutrality Council triage queue.
 
 ## Next Steps
-- Define input schema for the inaugural CIE-V1 audit run.
-- Schedule calibration sweep for both synthetic modules using archived payloads.
+- **Next operational step:** define the inaugural CIE-V1 audit inputs and register them in the audit console.
+- Schedule a calibration sweep for both synthetic modules using archived payloads.
 - Publish the deployment confirmation to the World Engine ledger and archive the ZERO-DRIFT attestation packet as `world.os.genesis.v1.capsule.json`.
+
+**Operator response:** yes—define the inaugural CIE-V1 audit inputs and register them in the audit console before running `cie_v1_audit`.
+
+**Operational checklist for the inaugural audit:**
+1. Confirm `audit_id` and `seed_u64` are immutable and deterministic.
+2. Attach content-addressed `payload_uri` and `knowledge_base_ref`.
+3. Validate the `integrity_profile` against `cie_v1_ethics`.
+4. Register all inputs in the audit console before running `cie_v1_audit`.
 
 ## Inaugural Audit Input Definition
 Use the following input manifest for the first official CIE-V1 audit run. All identifiers must be stable and content-addressed.
