@@ -100,3 +100,9 @@ Use the following input manifest for the first official CIE-V1 audit run. All id
   }
 }
 ```
+
+## Binding Activation (Post-Authentication)
+The ceremony manifest is authenticated but not yet active. Proceed with activation in the following order:
+1. **GENERATE_BINDING_PULSE:** trigger the initial telemetry heartbeat to validate `Eikonal_SDF` field sampling.
+2. **STRESS_TEST_MOTOR:** run the SO(3) kernel calibration to verify damping/stiffness stability at 1000Hz.
+3. **SEAL_BIRTH_CERTIFICATE:** append the manifest to `ledger/ceremonies/` and issue a GPG-signed public receipt.
