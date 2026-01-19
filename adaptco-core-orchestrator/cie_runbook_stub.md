@@ -1,7 +1,7 @@
 # CIE-V1 Operational Runbook (Stub)
 
 ## Overview
-The Content Integrity Evaluation Service (CIE-V1) enforces ZERO-DRIFT analysis using neutral perturbation models. All operations must route through the synthetic Noise Injector and Contradiction Synthesizer modules to maintain ethical compliance.
+The Content Integrity Evaluation Service (CIE-V1) enforces ZERO-DRIFT analysis using neutral perturbation models. All operations must route through the synthetic Noise Injector and Contradiction Synthesizer modules to maintain ethical compliance and supersede legacy CNE/FSV logic.
 
 ## Deployment Status
 - **World OS Anchor:** `WORLD_OS_INFINITE_GAME_DEPLOYED`
@@ -34,10 +34,10 @@ The Content Integrity Evaluation Service (CIE-V1) enforces ZERO-DRIFT analysis u
 ## Inaugural Audit Inputs (Required)
 Define the first official CIE-V1 audit run with the following inputs:
 - **audit_id:** Immutable identifier for the run (e.g., `cie-v1-0001`).
-- **content_payload:** The payload under evaluation with modality metadata (text/audio/vision).
+- **payload_uri:** Content-addressed payload under evaluation with modality metadata (text/audio/vision).
 - **integrity_profile:** Constraints and thresholds for neutrality and drift (e.g., `cie_v1_baseline`).
-- **knowledge_base:** Authorized references for contradiction synthesis (e.g., `kb/neutral_corpus_v1`).
-- **seed:** Deterministic seed to ensure reproducibility.
+- **knowledge_base_ref:** Authorized references for contradiction synthesis (e.g., `kb/neutral_corpus_v1`).
+- **seed_u64:** Deterministic seed to ensure reproducibility.
 Capture these inputs in the audit console before executing the `cie_v1_audit` pipeline.
 
 ## Escalation
