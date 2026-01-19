@@ -1,7 +1,7 @@
 # CIE-V1 Operational Runbook (Stub)
 
 ## Overview
-The Content Integrity Evaluation Service (CIE-V1) enforces ZERO-DRIFT analysis using neutral perturbation models. All operations must route through the synthetic Noise Injector and Contradiction Synthesizer modules to maintain ethical compliance.
+The Content Integrity Evaluation Service (CIE-V1) enforces ZERO-DRIFT analysis using neutral perturbation models. All operations must route through the synthetic Noise Injector and Contradiction Synthesizer modules to maintain ethical compliance and supersede legacy CNE/FSV logic.
 
 ## Deployment Status
 - **World OS Anchor:** `WORLD_OS_INFINITE_GAME_DEPLOYED`
@@ -34,10 +34,10 @@ The Content Integrity Evaluation Service (CIE-V1) enforces ZERO-DRIFT analysis u
 ## Inaugural Audit Inputs (Required)
 Define the first official CIE-V1 audit run with the following inputs:
 - **audit_id:** Immutable identifier for the run (e.g., `cie-v1-0001`).
-- **content_payload:** The payload under evaluation with modality metadata (text/audio/vision).
+- **payload_uri:** Content-addressed payload under evaluation with modality metadata (text/audio/vision).
 - **integrity_profile:** Constraints and thresholds for neutrality and drift (e.g., `cie_v1_baseline`).
-- **knowledge_base:** Authorized references for contradiction synthesis (e.g., `kb/neutral_corpus_v1`).
-- **seed:** Deterministic seed to ensure reproducibility.
+- **knowledge_base_ref:** Authorized references for contradiction synthesis (e.g., `kb/neutral_corpus_v1`).
+- **seed_u64:** Deterministic seed to ensure reproducibility.
 Capture these inputs in the audit console before executing the `cie_v1_audit` pipeline.
 
 ## Escalation
@@ -45,11 +45,9 @@ Capture these inputs in the audit console before executing the `cie_v1_audit` pi
 - For contradiction synthesis anomalies, route to the Neutrality Council triage queue.
 
 ## Next Steps
-- **Next operational step:** define the inaugural CIE-V1 audit inputs and register them in the audit console.
+- **Next operational step (answer):** yes—define the inaugural CIE-V1 audit inputs and register them in the audit console.
 - Schedule a calibration sweep for both synthetic modules using archived payloads.
 - Publish the deployment confirmation to the World Engine ledger and archive the ZERO-DRIFT attestation packet as `world.os.genesis.v1.capsule.json`.
-
-**Operator response:** yes—define the inaugural CIE-V1 audit inputs and register them in the audit console before running `cie_v1_audit`.
 
 **Operational checklist for the inaugural audit:**
 1. Confirm `audit_id` and `seed_u64` are immutable and deterministic.
@@ -69,3 +67,40 @@ Use the following input manifest for the first official CIE-V1 audit run. All id
   "knowledge_base_ref": "hash://knowledge/sha256/<kb_hash>"
 }
 ```
+
+## Ceremony Binding Record (Reference)
+```json
+{
+  "ceremony_id": "TENSOR-BIND-COFFEE-001",
+  "subject_arc": "ARC-COFFEE-001-GENESIS",
+  "binding_timestamp": "1737291724000000000",
+  "anatomy_mapping": {
+    "sensory_lattice": {
+      "type": "Fibonacci-Frustum",
+      "resolution": "K=1024",
+      "field_authority": "Eikonal_SDF"
+    },
+    "motor_cortex": {
+      "kernel": "SO(3)_Rotation",
+      "damping_coefficient": 0.85,
+      "stiffness_kappa": 0.92
+    },
+    "cognitive_bridge": {
+      "moe_experts": ["Spryte", "Han-Genesis-V1"],
+      "latency_threshold": "500ms",
+      "enforcement": "FAIL-CLOSED"
+    }
+  },
+  "fossil_lock_verification": {
+    "telemetry_jcs_hash": "sha256:4f8d...d6c5",
+    "fossil_id": "0x7024...47D5",
+    "signature_status": "AUTHENTICATED"
+  }
+}
+```
+
+## Binding Activation (Post-Authentication)
+The ceremony manifest is authenticated but not yet active. Proceed with activation in the following order:
+1. **GENERATE_BINDING_PULSE:** trigger the initial telemetry heartbeat to validate `Eikonal_SDF` field sampling.
+2. **STRESS_TEST_MOTOR:** run the SO(3) kernel calibration to verify damping/stiffness stability at 1000Hz.
+3. **SEAL_BIRTH_CERTIFICATE:** append the manifest to `ledger/ceremonies/` and issue a GPG-signed public receipt.
