@@ -22,7 +22,7 @@
   "modules": [
     {
       "module_id": "synthetic.noise.injector.v1",
-      "role": "Generates neutral perturbations across text, audio, and vision payloads without introducing semantic bias.",
+      "role": "Generates neutral perturbations across text, audio, and vision payloads without introducing semantic bias (supersedes legacy CNE/FSV logic).",
       "inputs": ["content_payload", "integrity_profile"],
       "outputs": ["perturbed_payload"],
       "parameters": {
@@ -33,7 +33,7 @@
     },
     {
       "module_id": "synthetic.contradiction.synth.v1",
-      "role": "Synthesizes neutral contradictions to challenge factual assertions while respecting ethical guardrails.",
+      "role": "Synthesizes neutral contradictions to challenge factual assertions while respecting ethical guardrails (supersedes legacy CNE/FSV logic).",
       "inputs": ["perturbed_payload", "knowledge_base"],
       "outputs": ["challenge_set"],
       "parameters": {
