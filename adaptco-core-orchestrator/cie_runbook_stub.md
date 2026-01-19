@@ -69,3 +69,34 @@ Use the following input manifest for the first official CIE-V1 audit run. All id
   "knowledge_base_ref": "hash://knowledge/sha256/<kb_hash>"
 }
 ```
+
+## Ceremony Binding Record (Reference)
+```json
+{
+  "ceremony_id": "TENSOR-BIND-COFFEE-001",
+  "subject_arc": "ARC-COFFEE-001-GENESIS",
+  "binding_timestamp": "1737291724000000000",
+  "anatomy_mapping": {
+    "sensory_lattice": {
+      "type": "Fibonacci-Frustum",
+      "resolution": "K=1024",
+      "field_authority": "Eikonal_SDF"
+    },
+    "motor_cortex": {
+      "kernel": "SO(3)_Rotation",
+      "damping_coefficient": 0.85,
+      "stiffness_kappa": 0.92
+    },
+    "cognitive_bridge": {
+      "moe_experts": ["Spryte", "Han-Genesis-V1"],
+      "latency_threshold": "500ms",
+      "enforcement": "FAIL-CLOSED"
+    }
+  },
+  "fossil_lock_verification": {
+    "telemetry_jcs_hash": "sha256:4f8d...d6c5",
+    "fossil_id": "0x7024...47D5",
+    "signature_status": "AUTHENTICATED"
+  }
+}
+```
