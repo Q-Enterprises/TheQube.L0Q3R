@@ -49,6 +49,8 @@ Capture these inputs in the audit console before executing the `cie_v1_audit` pi
 - Schedule a calibration sweep for both synthetic modules using archived payloads.
 - Publish the deployment confirmation to the World Engine ledger and archive the ZERO-DRIFT attestation packet as `world.os.genesis.v1.capsule.json`.
 
+**Operator response:** yes—define the inaugural CIE-V1 audit inputs and register them in the audit console before running `cie_v1_audit`.
+
 **Operational checklist for the inaugural audit:**
 1. Confirm `audit_id` and `seed_u64` are immutable and deterministic.
 2. Attach content-addressed `payload_uri` and `knowledge_base_ref`.
