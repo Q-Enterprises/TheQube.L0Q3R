@@ -9,10 +9,15 @@ PY_VERIFY := $(NODE_VERIFY_DIR)/verify.py
 
 LOG_DIR := $(FIXTURE_ROOT)/logs
 
-.PHONY: verify verify-node verify-py clean-logs
+.PHONY: verify verify-node verify-py clean-logs check-fixtures
 
-verify: clean-logs verify-node verify-py
+verify: check-fixtures clean-logs verify-node verify-py
 	@echo "PASS (node + python) :: $(FIXTURE_ROOT)"
+
+check-fixtures:
+	@test -d "$(NODE_VERIFY_DIR)" || (echo "Missing verify dir: $(NODE_VERIFY_DIR)" >&2 && exit 1)
+	@test -f "$(NODE_VERIFY)" || (echo "Missing node verifier: $(NODE_VERIFY)" >&2 && exit 1)
+	@test -f "$(PY_VERIFY)" || (echo "Missing python verifier: $(PY_VERIFY)" >&2 && exit 1)
 
 verify-node:
 	@mkdir -p "$(LOG_DIR)"
