@@ -1,3 +1,5 @@
+"""StableStringify-aligned fossilization helpers for CIE-V1 intake flows."""
+
 import hashlib
 import json
 
@@ -10,7 +12,7 @@ def sha256_hex(data: str) -> str:
     return hashlib.sha256(data.encode("utf-8")).hexdigest()
 
 
-def execute_fossilization(input_data):
+def execute_fossilization(input_data: dict) -> dict:
     # 1. Field Extraction (The New Schema)
     customer_id = input_data.get("customer_id")
     inquiry_type = input_data.get("inquiry_type")

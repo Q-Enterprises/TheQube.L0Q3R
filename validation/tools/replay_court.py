@@ -1,3 +1,5 @@
+"""Replay-court verification utilities (StableStringify-aligned)."""
+
 import hashlib
 import json
 import yaml
@@ -11,10 +13,14 @@ def canonicalize_jcs(data: dict) -> str:
 def verify_fossil(path_to_yaml: str) -> bool:
     """Verifies the integrity of a fossil artifact against its digest."""
     with open(path_to_yaml, "r") as f:
-        artifact = yaml.safe_load(f)
+        artifact = yaml.safe_load(f) or {}
 
-    provided_digest = artifact.pop("digest")
-    computed_digest = hashlib.sha256(canonicalize_jcs(artifact).encode()).hexdigest()
+    if "digest" not in artifact:
+        raise ValueError("Artifact is missing required digest field.")
+
+    provided_digest = artifact["digest"]
+    artifact_body = {key: value for key, value in artifact.items() if key != "digest"}
+    computed_digest = hashlib.sha256(canonicalize_jcs(artifact_body).encode()).hexdigest()
 
     return provided_digest == computed_digest
 
