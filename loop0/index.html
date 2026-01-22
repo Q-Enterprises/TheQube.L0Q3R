@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BAEK-CHEON-2026 Loop0 Playable Checkpoint (Canvas Scaffold)</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: "Trebuchet MS", system-ui, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        background: #0d0f1a;
+        color: #e7eaf6;
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+      }
+
+      .frame {
+        width: min(1100px, 92vw);
+        background: #141828;
+        border: 2px solid #26304f;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+        padding: 20px;
+      }
+
+      header {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 1.4rem;
+        color: #f9d26a;
+      }
+
+      header p {
+        margin: 0;
+        color: #9bb2ff;
+        font-size: 0.95rem;
+      }
+
+      .stage {
+        display: grid;
+        grid-template-columns: 1fr 280px;
+        gap: 16px;
+      }
+
+      canvas {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background: radial-gradient(circle at 20% 20%, #2b3252, #111424);
+        border: 2px solid #2b3a63;
+        border-radius: 12px;
+      }
+
+      .panel {
+        background: #1a2136;
+        border: 1px solid #2a355a;
+        border-radius: 12px;
+        padding: 14px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .panel h2 {
+        margin: 0;
+        font-size: 1rem;
+        color: #8ef0c5;
+      }
+
+      .stat {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.9rem;
+        color: #c8d3ff;
+      }
+
+      .note {
+        font-size: 0.8rem;
+        color: #9aa3c7;
+        line-height: 1.4;
+      }
+
+      .keys {
+        display: grid;
+        gap: 6px;
+        font-size: 0.85rem;
+      }
+
+      .keys span {
+        background: #10162b;
+        border: 1px solid #293456;
+        border-radius: 6px;
+        padding: 2px 6px;
+        font-family: "Courier New", monospace;
+        font-size: 0.8rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <header>
+        <h1>BAEK-CHEON-2026 Loop0 Playable Checkpoint (Canvas Scaffold)</h1>
+        <p>Deterministic fixed-timestep loop with physics integration, collision checks, and stable serialization stub.</p>
+      </header>
+      <div class="stage">
+        <canvas id="gameCanvas" width="960" height="540" aria-label="Loop0 playable checkpoint canvas"></canvas>
+        <aside class="panel">
+          <h2>Telemetry</h2>
+          <div class="stat"><span>Ticks</span><strong id="tickCount">0</strong></div>
+          <div class="stat"><span>Lives</span><strong id="lifeCount">3</strong></div>
+          <div class="stat"><span>Seed</span><strong id="seedValue">2026</strong></div>
+          <div class="stat"><span>Grounded</span><strong id="groundedValue">true</strong></div>
+          <div class="stat"><span>Stable Hash</span><strong id="hashValue">-</strong></div>
+          <h2>Controls</h2>
+          <div class="keys">
+            <div><span>←</span>/<span>→</span> Move</div>
+            <div><span>Space</span> Jump</div>
+            <div><span>R</span> Reset</div>
+          </div>
+          <p class="note">
+            Fixed dt (1/60), deterministic ordering, and a stable stringify stub for later fossilization/receipts.
+          </p>
+        </aside>
+      </div>
+    </div>
+
+    <script src="./invariants.js"></script>
+    <script src="./fossil_stub.js"></script>
+    <script src="./main.js"></script>
+  </body>
+</html>
