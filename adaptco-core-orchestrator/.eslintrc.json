@@ -7,7 +7,16 @@
   "parserOptions": {
     "ecmaVersion": "latest"
   },
-  "rules": {},
+  "rules": {
+    "no-restricted-properties": [
+      "error",
+      {
+        "object": "Math",
+        "property": "random",
+        "message": "Math.random() is disallowed in hashed runtime surfaces."
+      }
+    ]
+  },
   "overrides": [
     {
       "files": ["src/bin/**/*.js"],
@@ -20,6 +29,12 @@
             "message": "Math.random() is disallowed in deterministic runtime surfaces."
           }
         ]
+      }
+    },
+    {
+      "files": ["spa/**/*.js", "spa/**/*.jsx", "spa/**/*.ts", "spa/**/*.tsx"],
+      "rules": {
+        "no-restricted-properties": "off"
       }
     }
   ]

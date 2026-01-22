@@ -4,7 +4,7 @@ const crypto = require('crypto');
 
 // Configuration
 const LOG_DIR = path.join(__dirname, '../../logs/cie_v1');
-const RUNBOOK_PATH = path.join(__dirname, '../cie_runbook_stub.md');
+const RUNBOOK_PATH = path.join(__dirname, '../../docs/cie_runbook_stub.md');
 const CONFIG_PATH = path.join(__dirname, '../content_integrity_eval.json');
 
 // Ensure log directory exists
@@ -16,14 +16,21 @@ if (!fs.existsSync(LOG_DIR)) {
 const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
 
 // Mock Modules
+const deterministicFraction = (seed) => {
+    const hash = crypto.createHash('sha256').update(seed).digest();
+    const value = hash.readUInt32BE(0);
+    return value / 0xffffffff;
+};
+
 const syntheticNoiseInjector = {
     process: (payload, profile) => {
         console.log(`[Noise Injector] Processing payload with max_perturbation: ${config.modules[0].parameters.max_perturbation}`);
-        // Simulate perturbation
+        const noiseSeed = `${payload.run_id}:${payload.vehicle_id}:noise`;
+        const perturbationEnergy = deterministicFraction(noiseSeed) * 0.1; // Within 0.12 limit mostly
         return {
             ...payload,
             perturbed: true,
-            perturbation_energy: Math.random() * 0.1 // Within 0.12 limit mostly
+            perturbation_energy: perturbationEnergy
         };
     }
 };
@@ -31,8 +38,9 @@ const syntheticNoiseInjector = {
 const syntheticContradictionSynth = {
     process: (payload, knowledgeBase) => {
         console.log(`[Contradiction Synth] Synthesizing contradictions. Max: ${config.modules[1].parameters.max_contradictions}`);
-        // Simulate contradiction synthesis
-        const count = Math.floor(Math.random() * config.modules[1].parameters.max_contradictions);
+        const contradictionSeed = `${payload.run_id}:${payload.vehicle_id}:contradictions`;
+        const fraction = deterministicFraction(contradictionSeed);
+        const count = Math.floor(fraction * config.modules[1].parameters.max_contradictions);
         return {
             contradictions: Array(count).fill("Contradiction"),
             density: count / 100
