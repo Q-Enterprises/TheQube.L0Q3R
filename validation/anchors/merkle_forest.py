@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
@@ -13,31 +12,14 @@ def sha256_hex(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def canonicalize_jcs(payload: Dict[str, Any]) -> str:
-    """Implements JSON Canonicalization Scheme (RFC 8785) for dict payloads."""
-    return json.dumps(payload, sort_keys=True, separators=(",", ":"))
-
-
-@dataclass(frozen=True)
-class HashSurfaces:
-    leaf_hash: str
-    canonical_payload: str
-
-    @classmethod
-    def from_payload(cls, payload: Dict[str, Any]) -> "HashSurfaces":
-        canonical_source = {key: value for key, value in payload.items() if key != "digest"}
-        canonical_payload = canonicalize_jcs(canonical_source)
-        leaf_hash = payload.get("digest") or sha256_hex(canonical_payload.encode("utf-8"))
-        return cls(leaf_hash=leaf_hash, canonical_payload=canonical_payload)
-
-
 def canonical_leaf_hash(payload: Dict[str, Any]) -> str:
     """
-    Canonical leaf hashing: uses payload["digest"] when provided,
-    otherwise computes a digest from RFC 8785 canonical JSON without digest.
+    Canonical leaf hashing: caller must pass already-canonical JSON bytes
+    or a pre-hashed digest. Here we assume payload["digest"] exists.
     """
-    hs = HashSurfaces.from_payload(payload)
-    return hs.leaf_hash
+    if "digest" in payload:
+        return payload["digest"]
+    raise ValueError("Leaf payload must contain 'digest' field")
 
 
 @dataclass
