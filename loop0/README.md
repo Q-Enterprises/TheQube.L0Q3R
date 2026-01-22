@@ -1,13 +1,13 @@
 # Loop0 Playable Checkpoint (Canvas Scaffold)
 
-This folder contains a deterministic, fixed-timestep HTML5 canvas scaffold that mirrors the Loop0 playable checkpoint described in the prompt. It keeps the game loop, physics, input, and fossilization stub separated for easy replacement with canonical implementations.
+This folder hosts the Jurassic Pixels v0.6 runtime mock, keeping the demo split into an HTML shell and a React/Babel script for rapid iteration.
 
 ## Files
 
-- `index.html`: Canvas frame + telemetry panel.
-- `main.js`: Game loop, physics integration, collision checks, input wiring.
-- `invariants.js`: Fixed timestep constants and ordering helpers.
-- `fossil_stub.js`: Stable stringify + hash stub for replay/fossilization.
+- `index.html`: Tailwind + React shell and root element.
+- `main.js`: Runtime UI, sim loop, capsule log, and canvas rendering.
+- `invariants.js`: Reserved for deterministic constants (unused in v0.6 mock).
+- `fossil_stub.js`: Reserved for stable serialization hooks (unused in v0.6 mock).
 
 ## Fossil metadata
 
