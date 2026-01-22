@@ -1,8 +1,6 @@
 using UnityEngine;
-using System;
 using System.Security.Cryptography;
 using System.Text;
-using System.Collections.Generic;
 
 /**
  * SOVEREIGN OS: GENESIS VI - VEHICLE DYNAMICS KERNEL
@@ -51,12 +49,15 @@ public class SovereignVehicleKernel : MonoBehaviour
 
     private Vector3 _predictedPosition;
     private Material _rotorMaterial;
+    private Rigidbody _rigidbody;
     private static readonly int StressAmountID = Shader.PropertyToID("_StressAmount");
 
     void Start()
     {
         Renderer renderer = GetComponent<Renderer>();
         if (renderer != null) _rotorMaterial = renderer.material;
+        _rigidbody = GetComponent<Rigidbody>();
+        _predictedPosition = transform.position;
 
         Debug.Log("Sovereign Kernel: SO(3) Manifold Initialized.");
     }
@@ -86,6 +87,7 @@ public class SovereignVehicleKernel : MonoBehaviour
         }
         else
         {
+            ManifoldStable = true;
             UpdateVisualIntegrity(0.0f);
         }
 
@@ -101,7 +103,7 @@ public class SovereignVehicleKernel : MonoBehaviour
 
         // 4. Update Prediction for t+1 (Vanguard Logic)
         // Simplified prediction; in production, this is fed by Teensy 4.1
-        _predictedPosition = transform.position + (GetComponent<Rigidbody>()?.velocity * Time.fixedDeltaTime ?? Vector3.zero);
+        _predictedPosition = transform.position + (_rigidbody?.velocity * Time.fixedDeltaTime ?? Vector3.zero);
     }
 
     private float CalculateDeterminant3x3(Matrix4x4 m)
@@ -121,6 +123,11 @@ public class SovereignVehicleKernel : MonoBehaviour
 
     private void TriggerSentinelAbort(float error)
     {
+        if (!ManifoldStable)
+        {
+            return;
+        }
+
         ManifoldStable = false;
         UpdateVisualIntegrity(1.0f);
         Debug.LogError($"FATAL: Manifold Snap Detected. Error: {error:F9}m. Drift: {CurrentDrift:F9}. Aborting Frame.");
