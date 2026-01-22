@@ -55,6 +55,21 @@
     "deterministic": true,
     "notes": "All inputs must be immutable and referenced by content addressable URIs to preserve zero-drift guarantees."
   },
+  "validation": {
+    "envelope_schema": "ValidationJobEnvelope.v1",
+    "anchor_schema": "BatchAnchor.v1",
+    "tick_schema": "Tick.v1",
+    "tick_kind": "VALIDATION",
+    "digest_rule": "sha256(canonical_json(excluding digest))",
+    "storage_paths": [
+      "/validation/schemas/",
+      "/validation/envelopes/",
+      "/validation/anchors/",
+      "/validation/organs/",
+      "/validation/fossils/",
+      "/validation/ticks/"
+    ]
+  },
   "pipelines": [
     {
       "name": "cie_v1_audit",
