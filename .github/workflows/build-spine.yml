@@ -1,0 +1,65 @@
+name: Build Spine Accelerated Epoch
+
+on:
+  push:
+    branches: [ main ]
+  # Trigger every 30 minutes for automated waypoint generation
+  schedule:
+    - cron: '*/30 * * * *'
+
+jobs:
+  epoch-generation:
+    name: Generate Epoch & Map Waypoints
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Maintain full lineage for audit
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Initialize Accelerated Environment
+        run: pnpm install --no-frozen-lockfile
+
+      # Step 1: Compress Test Time & Run Unit Spec
+      - name: Execute 30-Min Unit Test Spec
+        run: |
+          pnpm run test:accelerated \
+            --duration=30m \
+            --mode=epoch_generation
+        env:
+          TEMPORAL_COMPRESSION: "true"
+
+      # Step 2: Map Waypoint & Calculate Time-Distance
+      - name: Map Checkpoint Waypoint
+        run: |
+          node ./scripts/generate-waypoint.js \
+            --seed=${{ github.sha }} \
+            --output=./out/waypoints/waypoint_${{ github.run_number }}.json
+
+      # Step 3: Anchor Identity & Fossilize Receipt
+      - name: Clean Ceremony Hashing
+        run: node ./scripts/generate-fossil-receipts.js
+        env:
+          SIGNING_KEY: ${{ secrets.OP_PRIMARY_PRIVATE_KEY }}
+          MUSTARD_DNA: "enabled" # Identity Guard enforcing run_id/vehicle_id
+
+      # Step 4: Export Forensic Trace for RL Patching
+      - name: Forensic Audit Export
+        run: node ./scripts/export-audit-ledger.js
+
+      - name: Upload RL Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: epoch-checkpoint-v1
+          path: |
+            ./out/waypoints/
+            ./proofs/BatchAnchor.v1.json
