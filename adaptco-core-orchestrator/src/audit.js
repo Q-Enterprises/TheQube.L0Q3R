@@ -59,6 +59,9 @@ async function runAudit(payload) {
     console.log(`Starting CIE-V1 Audit: ${auditId}`);
 
     try {
+        if (!payload?.run_id || !payload?.vehicle_id) {
+            throw new Error('Identity Breach: run_id and vehicle_id are required.');
+        }
         // 1. Ingest Payload
         console.log("Step 1: Ingest Payload");
         // Validate against integrity profile (mock)
@@ -84,7 +87,10 @@ async function runAudit(payload) {
         logMetric(auditId, 'zero_drift_score', zeroDriftScore);
 
         const scorecard = {
+            schema_version: "sovereign.fossil.v2",
             audit_id: auditId,
+            run_id: payload.run_id,
+            vehicle_id: payload.vehicle_id,
             timestamp: new Date().toISOString(),
             zero_drift_score: zeroDriftScore,
             status: "COMPLETED",
@@ -103,7 +109,9 @@ async function runAudit(payload) {
 if (require.main === module) {
     const samplePayload = {
         content: "The quick brown fox jumps over the lazy dog.",
-        type: "text"
+        type: "text",
+        run_id: "run-0001",
+        vehicle_id: "vehicle-0001"
     };
     runAudit(samplePayload);
 }
