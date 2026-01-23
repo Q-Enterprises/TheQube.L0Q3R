@@ -15,6 +15,21 @@ export interface CPU {
   cycles: number;
 }
 
+export type AddrMode =
+  | "IMM"
+  | "ZP"
+  | "ZPX"
+  | "ZPY"
+  | "ABS"
+  | "ABSX"
+  | "ABSY"
+  | "IND"
+  | "IZPX"
+  | "IZPY"
+  | "ACC"
+  | "IMP"
+  | "REL";
+
 /**
  * MicroOp: Represents a single bus interaction.
  * cycle_offset is now strictly RELATIVE to the start of the instruction.
@@ -38,6 +53,21 @@ export interface InstructionAudit {
   state_after: CPU;
 }
 
+export interface AddrResult {
+  addr?: number;
+  pageCrossed: boolean;
+  operand: number | null;
+}
+
+export interface InstructionDef {
+  opcode: number;
+  mnemonic: string;
+  mode: AddrMode;
+  baseCycles: number;
+  pageCrossAddsCycle: boolean;
+  exec: (cpu: NESCpu, bus: Bus, addr?: number, operand?: number | null) => void;
+}
+
 export interface Bus {
   read(addr: number, readOnly?: boolean): number;
   write(addr: number, value: number): void;
@@ -49,6 +79,189 @@ export interface Mapper {
   cpuRead(addr: number): number;
   cpuWrite(addr: number, value: number): void;
 }
+
+const INSTRUCTION_TABLE: InstructionDef[] = [
+  {
+    opcode: 0xa9,
+    mnemonic: "LDA",
+    mode: "IMM",
+    baseCycles: 2,
+    pageCrossAddsCycle: false,
+    exec: (cpu, bus, _addr, operand) => {
+      const value = operand ?? bus.read(cpu.pc);
+      cpu.a = value & 0xff;
+      cpu.setZN(cpu.a);
+    }
+  },
+  {
+    opcode: 0xa5,
+    mnemonic: "LDA",
+    mode: "ZP",
+    baseCycles: 3,
+    pageCrossAddsCycle: false,
+    exec: (cpu, bus, addr) => {
+      const value = bus.read(addr!);
+      cpu.a = value & 0xff;
+      cpu.setZN(cpu.a);
+    }
+  },
+  {
+    opcode: 0xb5,
+    mnemonic: "LDA",
+    mode: "ZPX",
+    baseCycles: 4,
+    pageCrossAddsCycle: false,
+    exec: (cpu, bus, addr) => {
+      const value = bus.read(addr!);
+      cpu.a = value & 0xff;
+      cpu.setZN(cpu.a);
+    }
+  },
+  {
+    opcode: 0xad,
+    mnemonic: "LDA",
+    mode: "ABS",
+    baseCycles: 4,
+    pageCrossAddsCycle: false,
+    exec: (cpu, bus, addr) => {
+      const value = bus.read(addr!);
+      cpu.a = value & 0xff;
+      cpu.setZN(cpu.a);
+    }
+  },
+  {
+    opcode: 0xbd,
+    mnemonic: "LDA",
+    mode: "ABSX",
+    baseCycles: 4,
+    pageCrossAddsCycle: true,
+    exec: (cpu, bus, addr) => {
+      const value = bus.read(addr!);
+      cpu.a = value & 0xff;
+      cpu.setZN(cpu.a);
+    }
+  },
+  {
+    opcode: 0xb9,
+    mnemonic: "LDA",
+    mode: "ABSY",
+    baseCycles: 4,
+    pageCrossAddsCycle: true,
+    exec: (cpu, bus, addr) => {
+      const value = bus.read(addr!);
+      cpu.a = value & 0xff;
+      cpu.setZN(cpu.a);
+    }
+  },
+  {
+    opcode: 0xa1,
+    mnemonic: "LDA",
+    mode: "IZPX",
+    baseCycles: 6,
+    pageCrossAddsCycle: false,
+    exec: (cpu, bus, addr) => {
+      const value = bus.read(addr!);
+      cpu.a = value & 0xff;
+      cpu.setZN(cpu.a);
+    }
+  },
+  {
+    opcode: 0xb1,
+    mnemonic: "LDA",
+    mode: "IZPY",
+    baseCycles: 5,
+    pageCrossAddsCycle: true,
+    exec: (cpu, bus, addr) => {
+      const value = bus.read(addr!);
+      cpu.a = value & 0xff;
+      cpu.setZN(cpu.a);
+    }
+  },
+  {
+    opcode: 0x85,
+    mnemonic: "STA",
+    mode: "ZP",
+    baseCycles: 3,
+    pageCrossAddsCycle: false,
+    exec: (cpu, bus, addr) => {
+      bus.write(addr!, cpu.a);
+    }
+  },
+  {
+    opcode: 0x95,
+    mnemonic: "STA",
+    mode: "ZPX",
+    baseCycles: 4,
+    pageCrossAddsCycle: false,
+    exec: (cpu, bus, addr) => {
+      bus.write(addr!, cpu.a);
+    }
+  },
+  {
+    opcode: 0x8d,
+    mnemonic: "STA",
+    mode: "ABS",
+    baseCycles: 4,
+    pageCrossAddsCycle: false,
+    exec: (cpu, bus, addr) => {
+      bus.write(addr!, cpu.a);
+    }
+  },
+  {
+    opcode: 0x9d,
+    mnemonic: "STA",
+    mode: "ABSX",
+    baseCycles: 5,
+    pageCrossAddsCycle: false,
+    exec: (cpu, bus, addr) => {
+      bus.write(addr!, cpu.a);
+    }
+  },
+  {
+    opcode: 0x99,
+    mnemonic: "STA",
+    mode: "ABSY",
+    baseCycles: 5,
+    pageCrossAddsCycle: false,
+    exec: (cpu, bus, addr) => {
+      bus.write(addr!, cpu.a);
+    }
+  },
+  {
+    opcode: 0x81,
+    mnemonic: "STA",
+    mode: "IZPX",
+    baseCycles: 6,
+    pageCrossAddsCycle: false,
+    exec: (cpu, bus, addr) => {
+      bus.write(addr!, cpu.a);
+    }
+  },
+  {
+    opcode: 0x91,
+    mnemonic: "STA",
+    mode: "IZPY",
+    baseCycles: 6,
+    pageCrossAddsCycle: false,
+    exec: (cpu, bus, addr) => {
+      bus.write(addr!, cpu.a);
+    }
+  },
+  {
+    opcode: 0xea,
+    mnemonic: "NOP",
+    mode: "IMP",
+    baseCycles: 2,
+    pageCrossAddsCycle: false,
+    exec: () => {
+      // no-op
+    }
+  }
+];
+
+const INSTRUCTION_BY_OPCODE = new Map(
+  INSTRUCTION_TABLE.map((def) => [def.opcode, def])
+);
 
 // ---------- NES Bus Implementation with Relative Offsets ----------
 
@@ -132,6 +345,110 @@ export class NESCpu implements CPU {
   // The CPU provides the offset logic to the bus: (GlobalCycles - StartOfInstruction)
   public getRelativeTick = () => this.cycles - this.instructionStartCycle;
 
+  public setZN(value: number): void {
+    const masked = value & 0xff;
+    if (masked === 0) {
+      this.p |= 0x02;
+    } else {
+      this.p &= 0xfd;
+    }
+    if (masked & 0x80) {
+      this.p |= 0x80;
+    } else {
+      this.p &= 0x7f;
+    }
+  }
+
+  private getAddr(mode: AddrMode): AddrResult {
+    let addr: number | undefined;
+    let operand: number | null = null;
+    let pageCrossed = false;
+
+    switch (mode) {
+      case "IMM":
+        operand = this.bus.read(this.pc);
+        addr = this.pc;
+        this.pc = (this.pc + 1) & 0xffff;
+        break;
+      case "ZP":
+        addr = this.bus.read(this.pc) & 0xff;
+        this.pc = (this.pc + 1) & 0xffff;
+        break;
+      case "ZPX":
+        addr = (this.bus.read(this.pc) + this.x) & 0xff;
+        this.pc = (this.pc + 1) & 0xffff;
+        break;
+      case "ZPY":
+        addr = (this.bus.read(this.pc) + this.y) & 0xff;
+        this.pc = (this.pc + 1) & 0xffff;
+        break;
+      case "ABS": {
+        const lo = this.bus.read(this.pc);
+        const hi = this.bus.read((this.pc + 1) & 0xffff);
+        addr = ((hi << 8) | lo) & 0xffff;
+        this.pc = (this.pc + 2) & 0xffff;
+        break;
+      }
+      case "ABSX": {
+        const lo = this.bus.read(this.pc);
+        const hi = this.bus.read((this.pc + 1) & 0xffff);
+        const base = ((hi << 8) | lo) & 0xffff;
+        addr = (base + this.x) & 0xffff;
+        pageCrossed = (base & 0xff00) !== (addr & 0xff00);
+        this.pc = (this.pc + 2) & 0xffff;
+        break;
+      }
+      case "ABSY": {
+        const lo = this.bus.read(this.pc);
+        const hi = this.bus.read((this.pc + 1) & 0xffff);
+        const base = ((hi << 8) | lo) & 0xffff;
+        addr = (base + this.y) & 0xffff;
+        pageCrossed = (base & 0xff00) !== (addr & 0xff00);
+        this.pc = (this.pc + 2) & 0xffff;
+        break;
+      }
+      case "IZPX": {
+        const zp = (this.bus.read(this.pc) + this.x) & 0xff;
+        const lo = this.bus.read(zp);
+        const hi = this.bus.read((zp + 1) & 0xff);
+        addr = ((hi << 8) | lo) & 0xffff;
+        this.pc = (this.pc + 1) & 0xffff;
+        break;
+      }
+      case "IZPY": {
+        const zp = this.bus.read(this.pc) & 0xff;
+        const lo = this.bus.read(zp);
+        const hi = this.bus.read((zp + 1) & 0xff);
+        const base = ((hi << 8) | lo) & 0xffff;
+        addr = (base + this.y) & 0xffff;
+        pageCrossed = (base & 0xff00) !== (addr & 0xff00);
+        this.pc = (this.pc + 1) & 0xffff;
+        break;
+      }
+      case "REL":
+        operand = this.bus.read(this.pc);
+        this.pc = (this.pc + 1) & 0xffff;
+        break;
+      case "ACC":
+      case "IMP":
+        break;
+      case "IND": {
+        const loPtr = this.bus.read(this.pc);
+        const hiPtr = this.bus.read((this.pc + 1) & 0xffff);
+        const ptr = ((hiPtr << 8) | loPtr) & 0xffff;
+        const lo = this.bus.read(ptr);
+        const hi = this.bus.read((ptr + 1) & 0xffff);
+        addr = ((hi << 8) | lo) & 0xffff;
+        this.pc = (this.pc + 2) & 0xffff;
+        break;
+      }
+      default:
+        throw new Error(`Unsupported addressing mode: ${mode}`);
+    }
+
+    return { addr, pageCrossed, operand };
+  }
+
   public reset(): void {
     this.instructionStartCycle = this.cycles;
     const lo = this.bus.read(0xfffc, true);
@@ -152,22 +469,25 @@ export class NESCpu implements CPU {
     const opcode = this.bus.read(this.pc);
     this.pc = (this.pc + 1) & 0xffff;
 
-    let mnemonic = "UNK";
+    const def = INSTRUCTION_BY_OPCODE.get(opcode);
+    let mnemonic = def?.mnemonic ?? "UNK";
+    let addr: number | undefined;
+    let operand: number | null = null;
+    let pageCrossed = false;
 
-    // 2. Decode & Execute
-    // Note: Cycles are incremented as per hardware documentation
-    switch (opcode) {
-      case 0xa9: // LDA Immediate
-        mnemonic = "LDA";
-        this.a = this.bus.read(this.pc);
-        this.pc = (this.pc + 1) & 0xffff;
-        this.cycles += 2;
-        break;
-      case 0xea: // NOP
-        mnemonic = "NOP";
-        this.cycles += 2;
-        break;
-      // Additional opcodes would expand the audit stream here
+    if (def) {
+      const addrResult = this.getAddr(def.mode);
+      addr = addrResult.addr;
+      operand = addrResult.operand;
+      pageCrossed = addrResult.pageCrossed;
+
+      def.exec(this, this.bus, addr, operand);
+      this.cycles += def.baseCycles;
+      if (def.pageCrossAddsCycle && pageCrossed) {
+        this.cycles += 1;
+      }
+    } else {
+      this.cycles += 2;
     }
 
     return {
