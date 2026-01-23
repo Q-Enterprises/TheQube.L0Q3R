@@ -24,5 +24,6 @@
   window.Loop0Fossil = {
     stableStringify,
     computeStableHash,
+    fossilize: (snapshot) => computeStableHash(snapshot),
   };
 })();

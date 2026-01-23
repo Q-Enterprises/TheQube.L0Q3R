@@ -1,13 +1,13 @@
 # Loop0 Playable Checkpoint (Canvas Scaffold)
 
-This folder hosts the Jurassic Pixels v0.6 runtime mock, keeping the demo split into an HTML shell and a React/Babel script for rapid iteration.
+This folder hosts the Jurassic Pixels v0.6 runtime mock, keeping the demo split into an HTML shell and a React/Babel script for rapid iteration. The Loop 0 chain is modeled explicitly as EngineCore → AgentRuntime → SovereignKernel → PhysicsManifold → StableStringify.
 
 ## Files
 
 - `index.html`: Tailwind + React shell and root element.
-- `main.js`: Runtime UI, sim loop, capsule log, and canvas rendering.
-- `invariants.js`: Reserved for deterministic constants (unused in v0.6 mock).
-- `fossil_stub.js`: Reserved for stable serialization hooks (unused in v0.6 mock).
+- `main.js`: Runtime UI, loop orchestration, intent vetting, and canvas rendering.
+- `invariants.js`: Deterministic constants + seeded RNG helper.
+- `fossil_stub.js`: Stable serialization + fossilization hash helper.
 
 ## Fossil metadata
 

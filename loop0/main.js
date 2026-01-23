@@ -70,6 +70,14 @@ const Icon = ({ name, size = 24, className = "" }) => {
   );
 };
 
+const {
+  FIXED_DT,
+  MAX_ACCUMULATOR,
+  INITIAL_SEED,
+  createRng,
+} = window.Loop0Invariants;
+const { fossilize } = window.Loop0Fossil;
+
 const ENTITY_CAPACITY = 32;
 const STRIDE = 8;
 
@@ -132,32 +140,125 @@ const App = () => {
   const [activeIncident, setActiveIncident] = useState(null);
   const [aiTip, setAiTip] = useState("Initializing MoE Council...");
   const [capsule, setCapsule] = useState([]);
+  const [fossilHash, setFossilHash] = useState("--------");
 
   const canvasRef = useRef(null);
+  const rngRef = useRef(createRng(INITIAL_SEED));
+  const inputQueueRef = useRef([]);
+
+  const StableStringify = {
+    fossilize: (snapshot) => fossilize(snapshot),
+  };
+
+  const PhysicsManifold = {
+    spawnEntity: (type, x, y, rng) => {
+      for (let i = 0; i < ENTITY_CAPACITY; i += 1) {
+        const ptr = 10 + i * STRIDE;
+        if (buffer[ptr + 2] === 0) {
+          buffer[ptr] = x ?? rng() * 400;
+          buffer[ptr + 1] = y ?? rng() * 300 + 50;
+          buffer[ptr + 2] = type;
+          buffer[ptr + 3] = 1;
+          buffer[ptr + 4] = 1.0;
+          buffer[ptr + 5] = (rng() - 0.5) * 2;
+          buffer[ptr + 6] = (rng() - 0.5) * 2;
+          break;
+        }
+      }
+    },
+    step: (intent, rng) => {
+      buffer[0] += 1;
+
+      if (intent?.type === "EMIT_BUBBLE") {
+        PhysicsManifold.spawnEntity(intent.payload.type, intent.payload.x, intent.payload.y, rng);
+      }
+
+      for (let i = 0; i < ENTITY_CAPACITY; i += 1) {
+        const p = 10 + i * STRIDE;
+        if (buffer[p + 2] === 0) continue;
+
+        buffer[p] += buffer[p + 5];
+        buffer[p + 1] += buffer[p + 6];
+
+        if (buffer[p] < 20 || buffer[p] > 580) buffer[p + 5] *= -1;
+        if (buffer[p + 1] < 20 || buffer[p + 1] > 380) buffer[p + 6] *= -1;
+
+        if (buffer[p + 2] === TYPE_TRAP) {
+          buffer[p + 7] += 1;
+          if (buffer[p + 7] > 180) buffer[p + 2] = 0;
+
+          for (let j = 0; j < ENTITY_CAPACITY; j += 1) {
+            const target = 10 + j * STRIDE;
+            if (buffer[target + 2] === TYPE_THREAT) {
+              const dx = buffer[p] - buffer[target];
+              const dy = buffer[p + 1] - buffer[target + 1];
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < 30) {
+                buffer[target + 2] = 0;
+                buffer[p + 2] = 0;
+                buffer[1] += 50;
+              }
+            }
+          }
+        }
+      }
+
+      if (buffer[0] % 600 === 0) {
+        const keys = Object.keys(INCIDENT_TABLE);
+        const choice = keys[Math.floor(rng() * keys.length)];
+        setActiveIncident(choice);
+        PhysicsManifold.spawnEntity(TYPE_THREAT, undefined, undefined, rng);
+      }
+    },
+  };
+
+  const SovereignKernel = {
+    executeSovereignTick: (proposal) => {
+      if (!proposal || proposal.type === "IDLE") return null;
+      if (proposal.type === "EMIT_BUBBLE") {
+        const { x, y } = proposal.payload;
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+      }
+      return proposal;
+    },
+  };
+
+  const AgentRuntime = {
+    requestInference: () => inputQueueRef.current.shift() || { type: "IDLE" },
+  };
+
+  const EngineCore = {
+    tick: () => {
+      const proposal = AgentRuntime.requestInference();
+      const vetted = SovereignKernel.executeSovereignTick(proposal);
+      PhysicsManifold.step(vetted, rngRef.current);
+
+      const snapshot = {
+        tick: buffer[0],
+        score: buffer[1],
+        safety: buffer[2],
+        happiness: buffer[3],
+        finances: buffer[4],
+      };
+      setFossilHash(StableStringify.fossilize(snapshot));
+
+      if (buffer[0] % 3000 === 0) {
+        updateAiCoaching();
+      }
+
+      setTick(buffer[0]);
+    },
+  };
 
   useEffect(() => {
     buffer[2] = 0.85;
     buffer[3] = 0.9;
     buffer[4] = 1000;
 
-    for (let i = 0; i < 6; i += 1) spawnEntity(TYPE_SPROUTLING);
-  }, []);
-
-  const spawnEntity = (type, x, y) => {
-    for (let i = 0; i < ENTITY_CAPACITY; i += 1) {
-      const ptr = 10 + i * STRIDE;
-      if (buffer[ptr + 2] === 0) {
-        buffer[ptr] = x ?? Math.random() * 400;
-        buffer[ptr + 1] = y ?? Math.random() * 300 + 50;
-        buffer[ptr + 2] = type;
-        buffer[ptr + 3] = 1;
-        buffer[ptr + 4] = 1.0;
-        buffer[ptr + 5] = (Math.random() - 0.5) * 2;
-        buffer[ptr + 6] = (Math.random() - 0.5) * 2;
-        break;
-      }
+    for (let i = 0; i < 6; i += 1) {
+      PhysicsManifold.spawnEntity(TYPE_SPROUTLING, undefined, undefined, rngRef.current);
     }
-  };
+  }, []);
 
   const logInteraction = (type, data) => {
     setCapsule((prev) => [...prev, { tick: buffer[0], type, data }].slice(-20));
@@ -167,69 +268,37 @@ const App = () => {
     const rect = canvasRef.current.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-    spawnEntity(TYPE_TRAP, x, y);
+    inputQueueRef.current.push({
+      type: "EMIT_BUBBLE",
+      payload: { type: TYPE_TRAP, x, y },
+    });
     logInteraction("EMIT_BUBBLE", { x, y });
   };
 
   useEffect(() => {
     let frame;
-    const loop = () => {
+    let accumulator = 0;
+    let lastTime = performance.now();
+
+    const loop = (time) => {
       if (isPlaying) {
-        simulate();
+        const deltaSeconds = Math.min((time - lastTime) / 1000, MAX_ACCUMULATOR);
+        accumulator = Math.min(accumulator + deltaSeconds, MAX_ACCUMULATOR);
+
+        while (accumulator >= FIXED_DT) {
+          EngineCore.tick();
+          accumulator -= FIXED_DT;
+        }
+
         render();
       }
+      lastTime = time;
       frame = requestAnimationFrame(loop);
     };
+
     frame = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(frame);
   }, [isPlaying, activeIncident]);
-
-  const simulate = () => {
-    buffer[0] += 1;
-
-    for (let i = 0; i < ENTITY_CAPACITY; i += 1) {
-      const p = 10 + i * STRIDE;
-      if (buffer[p + 2] === 0) continue;
-
-      buffer[p] += buffer[p + 5];
-      buffer[p + 1] += buffer[p + 6];
-
-      if (buffer[p] < 20 || buffer[p] > 580) buffer[p + 5] *= -1;
-      if (buffer[p + 1] < 20 || buffer[p + 1] > 380) buffer[p + 6] *= -1;
-
-      if (buffer[p + 2] === TYPE_TRAP) {
-        buffer[p + 7] += 1;
-        if (buffer[p + 7] > 180) buffer[p + 2] = 0;
-
-        for (let j = 0; j < ENTITY_CAPACITY; j += 1) {
-          const target = 10 + j * STRIDE;
-          if (buffer[target + 2] === TYPE_THREAT) {
-            const dx = buffer[p] - buffer[target];
-            const dy = buffer[p + 1] - buffer[target + 1];
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 30) {
-              buffer[target + 2] = 0;
-              buffer[p + 2] = 0;
-              buffer[1] += 50;
-            }
-          }
-        }
-      }
-    }
-
-    if (buffer[0] % 600 === 0) {
-      const keys = Object.keys(INCIDENT_TABLE);
-      const choice = keys[Math.floor(Math.random() * keys.length)];
-      setActiveIncident(choice);
-      spawnEntity(TYPE_THREAT);
-    }
-
-    if (buffer[0] % 3000 === 0) {
-      updateAiCoaching();
-    }
-
-    setTick(buffer[0]);
-  };
 
   const updateAiCoaching = async () => {
     const metrics = {
@@ -426,6 +495,7 @@ const App = () => {
             </div>
             <div className="text-right font-mono text-[10px] text-slate-500">
               VECTOR_TICK: {tick.toString().padStart(8, "0")}
+              <div className="text-[9px] text-slate-600">FOSSIL_HASH: {fossilHash}</div>
             </div>
           </div>
         </div>
