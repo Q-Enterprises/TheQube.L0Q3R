@@ -256,6 +256,86 @@ const INSTRUCTION_TABLE: InstructionDef[] = [
     exec: () => {
       // no-op
     }
+  },
+  {
+    opcode: 0x10,
+    mnemonic: "BPL",
+    mode: "REL",
+    baseCycles: 2,
+    pageCrossAddsCycle: true,
+    exec: (cpu, _bus, addr) => {
+      cpu.branchIf((cpu.p & 0x80) === 0, addr);
+    }
+  },
+  {
+    opcode: 0x30,
+    mnemonic: "BMI",
+    mode: "REL",
+    baseCycles: 2,
+    pageCrossAddsCycle: true,
+    exec: (cpu, _bus, addr) => {
+      cpu.branchIf((cpu.p & 0x80) !== 0, addr);
+    }
+  },
+  {
+    opcode: 0x50,
+    mnemonic: "BVC",
+    mode: "REL",
+    baseCycles: 2,
+    pageCrossAddsCycle: true,
+    exec: (cpu, _bus, addr) => {
+      cpu.branchIf((cpu.p & 0x40) === 0, addr);
+    }
+  },
+  {
+    opcode: 0x70,
+    mnemonic: "BVS",
+    mode: "REL",
+    baseCycles: 2,
+    pageCrossAddsCycle: true,
+    exec: (cpu, _bus, addr) => {
+      cpu.branchIf((cpu.p & 0x40) !== 0, addr);
+    }
+  },
+  {
+    opcode: 0x90,
+    mnemonic: "BCC",
+    mode: "REL",
+    baseCycles: 2,
+    pageCrossAddsCycle: true,
+    exec: (cpu, _bus, addr) => {
+      cpu.branchIf((cpu.p & 0x01) === 0, addr);
+    }
+  },
+  {
+    opcode: 0xb0,
+    mnemonic: "BCS",
+    mode: "REL",
+    baseCycles: 2,
+    pageCrossAddsCycle: true,
+    exec: (cpu, _bus, addr) => {
+      cpu.branchIf((cpu.p & 0x01) !== 0, addr);
+    }
+  },
+  {
+    opcode: 0xd0,
+    mnemonic: "BNE",
+    mode: "REL",
+    baseCycles: 2,
+    pageCrossAddsCycle: true,
+    exec: (cpu, _bus, addr) => {
+      cpu.branchIf((cpu.p & 0x02) === 0, addr);
+    }
+  },
+  {
+    opcode: 0xf0,
+    mnemonic: "BEQ",
+    mode: "REL",
+    baseCycles: 2,
+    pageCrossAddsCycle: true,
+    exec: (cpu, _bus, addr) => {
+      cpu.branchIf((cpu.p & 0x02) !== 0, addr);
+    }
   }
 ];
 
@@ -359,6 +439,14 @@ export class NESCpu implements CPU {
     }
   }
 
+  public branchIf(take: boolean, addr?: number): void {
+    if (!take || addr === undefined) {
+      return;
+    }
+    this.cycles += 1;
+    this.pc = addr & 0xffff;
+  }
+
   private getAddr(mode: AddrMode): AddrResult {
     let addr: number | undefined;
     let operand: number | null = null;
@@ -428,6 +516,12 @@ export class NESCpu implements CPU {
       case "REL":
         operand = this.bus.read(this.pc);
         this.pc = (this.pc + 1) & 0xffff;
+        {
+          const offset = (operand << 24) >> 24;
+          const base = this.pc & 0xffff;
+          addr = (base + offset) & 0xffff;
+          pageCrossed = (base & 0xff00) !== (addr & 0xff00);
+        }
         break;
       case "ACC":
       case "IMP":
@@ -437,7 +531,7 @@ export class NESCpu implements CPU {
         const hiPtr = this.bus.read((this.pc + 1) & 0xffff);
         const ptr = ((hiPtr << 8) | loPtr) & 0xffff;
         const lo = this.bus.read(ptr);
-        const hi = this.bus.read((ptr + 1) & 0xffff);
+        const hi = this.bus.read((ptr & 0xff00) | ((ptr + 1) & 0xff));
         addr = ((hi << 8) | lo) & 0xffff;
         this.pc = (this.pc + 2) & 0xffff;
         break;
