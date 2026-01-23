@@ -1,0 +1,41 @@
+name: World Engine Sovereign Audit
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  audit-verify:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: "Clone Repository"
+        uses: actions/checkout@v4
+
+      - name: "Initialize Node.js ${{ matrix.node-version }}"
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: "Install Kernel Dependencies"
+        run: npm install
+
+      - name: "Deterministic Linting (Static Analysis)"
+        run: npx eslint ./app/nes/*.ts
+
+      - name: "Execute Phase 1 Golden Trace"
+        run: |
+          # This executes the test harness defined in nes_bus_cpu_v01.ts
+          # Rejects the commit if cycle counts or fossils diverge from the baseline.
+          npm test -- --grep "Golden Trace"
+
+      - name: "Finality Check"
+        if: success()
+        run: echo "BAEK-CHEON-2026-STATIC Contract Verified: Artifact is Replayable."
