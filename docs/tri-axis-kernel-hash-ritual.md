@@ -169,3 +169,14 @@ Replace `<hex>` markers with computed hex64 values prefixed by `sha256:`.
   ]
 }
 ```
+
+## Parker’s Sandbox Concept Prompt (Corridor-Grade Illustration)
+Use this JSON prompt to generate the corridor-grade “Parker’s Sandbox” concept image.
+
+```json
+{
+  "prompt": "Isometric, high-detail digital illustration of a corridor-grade concept called “Parker’s Sandbox.” Left: a LEGO-style voxel sandbox on a raised grid platform with colorful bricks, a small player avatar standing on a canopy platform, and a translucent holographic JSON checkpoint floating above showing generic fields like schema, world_id, tick_index and seed (no copyrighted text). Center: a browser window mockup showing a Three.js scene with subtle code snippets and a grid helper overlay. Right: a ROM launcher UI with two cartridge icons labeled generically (homebrew_01, homebrew_02), a manifest list, and a small WASM/emulator panel. Background: a Docker container icon, a simplified nginx/docker-compose box diagram, and blueprint-style overlays showing deterministic replay arrows and a merkle/ledger node symbol. Style: clean tech aesthetic blending flat vector UI with semi-realistic 3D voxels, soft studio lighting, muted teal/orange palette, crisp lines, slight depth of field, 16:9 composition, readable at thumbnail scale, no trademarked characters or logos.",
+  "progression_text": "Composing a corridor-grade sandbox concept image...",
+  "transparent_background": false
+}
+```
