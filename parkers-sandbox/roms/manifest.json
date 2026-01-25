@@ -1,0 +1,13 @@
+{
+  "schema": "RomManifest.v1",
+  "title": "Parker Shell Cartridges",
+  "roms": [
+    {
+      "id": "parkers_sandbox_level1",
+      "name": "Parker's Sandbox – Level 1",
+      "path": "roms/parkers_sandbox_level1.ch8",
+      "sha256": "57cdf8df46142c25574757d3327cee1a9525d4f0eed256bf2058779789c2f7ce",
+      "start_address": "0x200"
+    }
+  ]
+}
