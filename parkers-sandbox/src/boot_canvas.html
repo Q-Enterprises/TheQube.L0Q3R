@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Parker's Sandbox – Level 1</title>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+
+    body {
+      background: #020617;
+      color: #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      gap: 16px;
+    }
+
+    canvas {
+      border: 1px solid #38bdf8;
+      image-rendering: pixelated;
+    }
+
+    .legend {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      text-align: center;
+      max-width: 480px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Parker's Sandbox – Level 1 (CHIP-8)</h1>
+  <canvas id="screen" width="64" height="32"></canvas>
+  <div class="legend">
+    Use the numeric keypad-style keys: <strong>4</strong> (left), <strong>6</strong> (right), <strong>8</strong> (up), <strong>2</strong> (down).
+  </div>
+  <pre id="rom-inspector" class="legend"></pre>
+  <script type="module">
+    import { Chip8 } from './chip8.js';
+
+    const canvas = document.getElementById('screen');
+    const ctx = canvas.getContext('2d');
+    const SCALE = 10;
+    canvas.width = 64 * SCALE;
+    canvas.height = 32 * SCALE;
+
+    const chip8 = new Chip8({
+      drawPixel(x, y, on) {
+        ctx.fillStyle = on ? '#38bdf8' : '#020617';
+        ctx.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
+      }
+    });
+
+    function formatHexDump(bytes) {
+      const lines = [];
+      for (let offset = 0; offset < bytes.length; offset += 16) {
+        const chunk = bytes.slice(offset, offset + 16);
+        const hex = Array.from(chunk, (value) => value.toString(16).padStart(2, '0')).join(' ');
+        lines.push(`${offset.toString(16).padStart(4, '0')}: ${hex}`);
+      }
+      return lines.join('\n');
+    }
+
+    async function loadRom(url) {
+      const res = await fetch(url);
+      const buf = await res.arrayBuffer();
+      const bytes = new Uint8Array(buf);
+      chip8.loadRom(bytes);
+      const inspector = document.getElementById('rom-inspector');
+      inspector.textContent = `ROM Inspector (hex)\n${formatHexDump(bytes)}`;
+    }
+
+    const keyMap = {
+      '2': 0x2,
+      '4': 0x4,
+      '6': 0x6,
+      '8': 0x8
+    };
+
+    window.addEventListener('keydown', (event) => {
+      const key = keyMap[event.key];
+      if (key !== undefined) {
+        chip8.keyDown(key);
+      }
+    });
+
+    window.addEventListener('keyup', (event) => {
+      const key = keyMap[event.key];
+      if (key !== undefined) {
+        chip8.keyUp(key);
+      }
+    });
+
+    async function main() {
+      await loadRom('../roms/parkers_sandbox_level1.ch8');
+      function loop() {
+        for (let i = 0; i < 10; i += 1) {
+          chip8.cycle();
+        }
+        requestAnimationFrame(loop);
+      }
+      loop();
+    }
+
+    main();
+  </script>
+</body>
+</html>

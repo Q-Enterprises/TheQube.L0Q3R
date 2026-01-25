@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://world-engine/contracts/ActionProposal.v1.schema.json",
+  "title": "ActionProposal.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "tick",
+    "avatar_id",
+    "throttle_q",
+    "brake_q",
+    "steer_q"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "ActionProposal.v1" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "tick": { "type": "integer", "minimum": 0 },
+    "avatar_id": { "type": "string", "minLength": 1 },
+    "throttle_q": { "type": "integer", "minimum": 0, "maximum": 1000 },
+    "brake_q": { "type": "integer", "minimum": 0, "maximum": 1000 },
+    "steer_q": { "type": "integer", "minimum": -1000, "maximum": 1000 }
+  }
+}
