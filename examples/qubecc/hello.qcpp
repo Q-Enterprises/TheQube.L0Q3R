@@ -1,0 +1,8 @@
+# Simple QUBE assembly sample
+PUSH 72
+PUSH 101
+PUSH 108
+PUSH 108
+PUSH 111
+PRINT
+HALT
