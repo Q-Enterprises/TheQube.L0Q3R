@@ -1,2 +1,70 @@
+# Part 1: VAL-2026 Phase C Core (Keep this exact structure)
 node_modules/
-logs/
+npm-debug.log*
+yarn-debug.log*
+.pnpm-debug.log*
+.DS_Store
+Thumbs.db
+.env*.local
+*.pem *.key *.crt *.jks
+
+# Part 2: VAL-2026 Build & Runtime (Emergence MVG)
+dist/ build/ .out/ out/ tmp/ temp/
+logs/ *.log coverage/ .nyc_output/
+runtime/cie_v1_smoke.log.jsonl
+
+# Part 3: VAL-2026 Agentic Pipeline (Shellwave + Sovereign UI)
+fossilcourt/*.json
+*.qcap
+fixtures/*.json
+scripts/local-*.*
+packages/contracts/artifacts/
+packages/contracts/typechain-types/
+
+# Part 4: VAL-2026 Lockfiles & Package Managers (Keep ONE)
+# Use yarn.lock OR package-lock.json OR pnpm-lock.yaml
+!.yarn/          # Yarn PnP (if using)
+!.yarnrc.yml     # Yarn config (if using)
+!pnpm-lock.yaml  # PNPM (if using)
+
+# Part 5: VAL-2026 Deployment (Docker + Spectral)
+docker-compose.override.yml
+docker-compose.*.yml
+*.tgz
+.spectral/
+openapi-diff.cache/
+.github/workflows/**/action-logs/
+.github/workflows/**/artifacts/
+
+# Part 6: VAL-2026 Language-Specific (Organized by stack)
+# Node.js + React + Sovereign UI
+**/node_modules/
+**/*.log
+**/.env*
+**/coverage/
+
+# Python + Emergence Backend
+__pycache__/
+*.py[cod]
+*.pyo *.pyd
+.venv/ venv/ env/ ENV/
+
+# Java (OpenAPI-Diff + VAL toolchain)
+*.class
+target/
+build/
+
+# IDE (VSCode, IntelliJ, etc.)
+.vscode/settings.json
+.idea/
+*.suo *.ntvs* *.njsproj *.sln
+
+# VAL-2026 Phase C: PRESERVE THESE (critical configs)
+!.vscode/extensions.json
+!.vscode/tasks.json
+!docker-compose.yml
+!docker-compose.prod.yml
+!.github/workflows/deploy.yml
+!fossilcourt/FOS-*.json  # Agent audit trail
+!val-2026-phasec-manifest.json
+!shellwave-128bpm-audio-spec.md
