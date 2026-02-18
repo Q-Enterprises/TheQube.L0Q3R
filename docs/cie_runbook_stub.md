@@ -31,6 +31,13 @@ The Content Integrity Evaluation Service (CIE-V1) enforces ZERO-DRIFT analysis u
 - Stream metrics `perturbation_energy`, `contradiction_density`, and `zero_drift_score` to the observability sink `logs/cie_v1/`.
 - All logs must include the audit ID and seed for reproducibility.
 
+## Validation Artifacts & Storage Layout
+- **Envelope schema:** `ValidationJobEnvelope.v1`
+- **Anchor schema:** `BatchAnchor.v1`
+- **Tick schema:** `Tick.v1` with `kind="VALIDATION"`
+- **Digest rule:** `sha256(canonical_json(excluding digest))`
+- **Storage paths:** `/validation/schemas/`, `/validation/envelopes/`, `/validation/anchors/`, `/validation/organs/`, `/validation/fossils/`, `/validation/ticks/`
+
 ## Inaugural Audit Inputs (Required)
 Define the first official CIE-V1 audit run with the following inputs:
 - **audit_id:** Immutable identifier for the run (e.g., `cie-v1-0001`).

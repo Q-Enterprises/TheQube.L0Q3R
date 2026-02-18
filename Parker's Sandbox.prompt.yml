@@ -6,4 +6,9 @@ modelParameters:
   frequency_penalty: 0
   presence_penalty: 0
 model: microsoft/phi-4-multimodal-instruct
-messages: []
+messages:
+  - role: user
+    content:
+      prompt: "Isometric, high-detail digital illustration of a corridor-grade concept called “Parker’s Sandbox.” Left: a LEGO-style voxel sandbox on a raised grid platform with colorful bricks, a small player avatar standing on a canopy platform, and a translucent holographic JSON checkpoint floating above showing generic fields like schema, world_id, tick_index and seed (no copyrighted text; avoid any trademarked logos or recognizable brand marks). Center: a browser window mockup showing a Three.js scene with subtle code snippets and a grid helper overlay. Right: a ROM launcher UI with two cartridge icons labeled generically (homebrew_01; homebrew_02), a manifest list, and a small WASM/emulator panel. Background: a generic container icon (not a Docker whale), a simplified reverse-proxy/compose box diagram (no nginx logo), and blueprint-style overlays showing deterministic replay arrows and a merkle/ledger node symbol. Style: clean tech aesthetic blending flat vector UI with semi-realistic 3D voxels, soft studio lighting, muted teal/orange palette, crisp lines, slight depth of field, 16:9 composition, readable at thumbnail scale, no trademarked characters or logos."
+      progression_text: "Composing a corridor-grade sandbox concept image..."
+      transparent_background: false

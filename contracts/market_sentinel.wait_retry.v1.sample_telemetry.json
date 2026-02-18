@@ -1,0 +1,16 @@
+{
+  "event_id": "MS-20260201-113500-ab12cd34",
+  "quorum_level": "sovereign_pivot",
+  "alpha_flux_score": 0.85,
+  "stability_metrics": {
+    "signal_stdev": 0.032,
+    "stable_cycles": 9,
+    "jitter_factor": 0.12,
+    "dwell_time_actual": 192.3
+  },
+  "wait_retry_receipt": {
+    "attempts": [90, 180],
+    "final_stable": true,
+    "jitter_mitigated": true
+  }
+}
