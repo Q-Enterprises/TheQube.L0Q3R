@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "cie_v2_plug.v1.schema.json",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "world_id",
+    "capsule_digest",
+    "engine_hash",
+    "baseline_merkle_root",
+    "kernel_token",
+    "invariant_set",
+    "extractor_version"
+  ],
+  "properties": {
+    "schema_version": { "const": "cie_v2_plug.v1" },
+    "world_id": { "type": "string" },
+    "capsule_digest": { "type": "string" },
+    "engine_hash": { "type": "string" },
+    "baseline_merkle_root": { "type": "string" },
+    "kernel_token": { "type": "object" },
+    "invariant_set": { "type": "object" },
+    "extractor_version": { "type": "string" },
+    "capsule_ref": {
+      "type": "object",
+      "required": ["kind", "uri"],
+      "properties": {
+        "kind": { "type": "string" },
+        "uri": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

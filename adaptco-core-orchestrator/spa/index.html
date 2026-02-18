@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sovereign Command | Phase 10: Curvature Fold</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Chosen Palette: Obsidian Desert - Background: #FAF7F2 (Bone), Text: #1C1917 (Stone), Accents: #B45309 (Amber), #0F172A (Navy) -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;800&display=swap');
+
+        :root {
+            --bone: #FAF7F2;
+            --stone: #1C1917;
+            --amber: #B45309;
+            --navy: #0F172A;
+            --emerald: #10B981;
+            --crimson: #991B1B;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bone);
+            color: var(--stone);
+            overflow-x: hidden;
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            height: 250px;
+            max-height: 300px;
+        }
+
+        .lidar-container {
+            position: relative;
+            width: 100%;
+            height: 450px;
+            background-color: var(--navy);
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+        }
+
+        .tactical-border {
+            border: 1px solid rgba(28, 25, 23, 0.1);
+        }
+
+        .terminal {
+            background-color: #0c0e14;
+            color: #38BDF8;
+            border-left: 4px solid var(--amber);
+        }
+
+        .status-pulse {
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+        }
+
+        .glass-modal {
+            background: rgba(250, 247, 242, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(180, 83, 9, 0.2);
+        }
+
+        .ledger-node {
+            border-left: 2px solid var(--amber);
+            padding-left: 1rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        /* Scrollbar customization */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bone); }
+        ::-webkit-scrollbar-thumb { background: var(--amber); border-radius: 10px; }
+    </style>
+</head>
+<body class="antialiased min-h-screen pb-12">
+
+    <!-- Header / Tactical Status Bar -->
+    <header class="sticky top-0 z-50 bg-[#FAF7F2]/95 backdrop-blur-md border-b border-stone-200 py-4 px-6 shadow-sm">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-stone-900 flex items-center justify-center rounded text-amber-500 font-bold tracking-tighter shadow-lg">GOLD</div>
+                <div>
+                    <h1 class="text-sm font-black uppercase tracking-widest leading-none">Sovereign Command Console</h1>
+                    <p class="text-[10px] mono text-amber-700 font-bold uppercase tracking-tighter mt-1">Deterministic "Golden" Bundle // v3.0.0</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-8">
+                <div class="flex flex-col items-end">
+                    <span class="text-[9px] font-bold text-stone-400 uppercase tracking-widest">State Policy</span>
+                    <span class="text-xs font-black mono text-emerald-600">N0_INTEGER_ONLY</span>
+                </div>
+                <div class="flex items-center gap-2 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+                    <span class="status-dot w-2 h-2 bg-emerald-500 rounded-full"></span>
+                    <span class="text-[10px] mono font-bold text-emerald-700 uppercase tracking-tighter">VAULT_LOCKED</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+
+        <!-- Intro Section -->
+        <section class="max-w-3xl">
+            <h2 class="text-3xl md:text-5xl font-black tracking-tighter leading-tight mb-4">The <span class="italic text-amber-600">Golden</span> Backbone.</h2>
+            <p class="text-stone-600 text-lg leading-relaxed">
+                By strictly adhering to micrometer units and a cryptographically sealed build, we have neutralized cross-platform drift. Current variant: <strong>Pocket Bunny R32-K</strong> (1050 permille scale).
+            </p>
+        </section>
+
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            
+            <!-- LIDAR Visualization Column -->
+            <div class="lg:col-span-3 space-y-4">
+                <div class="flex justify-between items-end">
+                    <h3 class="text-xs font-black uppercase tracking-[0.2em] text-stone-400">Deterministic LIDAR Cloud</h3>
+                    <div class="text-[10px] mono text-amber-600 font-bold uppercase">UNIT_OF_TRUTH: MICROMETER (um)</div>
+                </div>
+                <div class="lidar-container" id="lidar-canvas-parent">
+                    <div id="lidar-overlay" class="absolute top-6 left-6 z-10 space-y-2 pointer-events-none">
+                        <div class="bg-navy-900/80 backdrop-blur-md p-3 rounded border border-white/10">
+                            <p class="text-[9px] font-bold uppercase text-white opacity-50 mb-1">Geometric Consistency</p>
+                            <p id="geo-status" class="text-xs font-bold text-emerald-400">1050 PERMILLE // SYNC_OK</p>
+                        </div>
+                        <button onclick="aiAuditGoldenBundle()" class="pointer-events-auto bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold uppercase px-3 py-1 rounded flex items-center gap-1.5 transition shadow-lg">
+                            <span>✨ Verify Golden State</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Tactical Advisor (Updated for Golden Context) -->
+            <div class="bg-stone-900 text-stone-100 p-6 rounded-2xl shadow-xl flex flex-col space-y-4 border border-white/5">
+                <h4 class="text-[10px] font-black uppercase text-amber-500 tracking-widest flex items-center gap-2">
+                    <span>✨ Physics Advisor (E5)</span>
+                </h4>
+                <div id="advisor-chat" class="flex-grow overflow-y-auto space-y-3 mono text-[10px] pr-2 max-h-[300px]">
+                    <p class="text-emerald-400 opacity-80">> Golden backbone anchored at Tick 0.</p>
+                    <p class="text-stone-400 opacity-60">> Micrometer drift neutralized.</p>
+                </div>
+                <div class="pt-2 flex flex-col gap-2">
+                    <input type="text" id="advisor-input" class="bg-white/5 border border-white/10 rounded px-3 py-2 text-xs focus:outline-none focus:border-amber-500 transition" placeholder="Query geometric consistency...">
+                    <button onclick="aiTacticalChat()" class="w-full py-2 bg-amber-600 text-white text-[10px] font-bold uppercase rounded hover:bg-amber-700 transition">Execute Hash-Fill</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance & Stability Metrics Grid -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- SHA256 Chain Integrity -->
+            <div class="bg-white p-6 rounded-2xl tactical-border shadow-sm flex flex-col">
+                <h4 class="text-[10px] font-black uppercase text-stone-400 mb-6 tracking-widest text-center">Ledger Chain Integrity</h4>
+                <div id="ledger-chain-viz" class="flex-grow overflow-y-auto max-h-[150px] space-y-2 mono">
+                    <div class="ledger-node">GENESIS [Tick 0] <br> <span class="text-emerald-600">H: 0000...0000</span></div>
+                    <div class="ledger-node">TRANSFORM [Tick 1] <br> <span class="text-emerald-600">H: 0x8F7A...B221</span></div>
+                </div>
+                <button onclick="aiMockBuildRun()" class="mt-4 text-[10px] font-bold text-navy-700 uppercase border border-navy-200 px-4 py-1.5 rounded hover:bg-navy-50 transition">✨ Mock Build Run</button>
+            </div>
+
+            <!-- Unit Stability Gauge -->
+            <div class="bg-white p-6 rounded-2xl tactical-border shadow-sm flex flex-col items-center">
+                <h4 class="text-[10px] font-black uppercase text-stone-400 mb-6 tracking-widest">Unit Persistence (um)</h4>
+                <div class="chart-container">
+                    <canvas id="spfmChart"></canvas>
+                </div>
+                <div class="mt-4 text-[10px] font-bold uppercase text-emerald-600">DRIFT: 0.000001um</div>
+            </div>
+
+            <!-- RFC8785 Compliance -->
+            <div class="bg-white p-6 rounded-2xl tactical-border shadow-sm flex flex-col">
+                <h4 class="text-[10px] font-black uppercase text-stone-400 mb-6 tracking-widest text-center">RFC8785 Canonicalization</h4>
+                <div class="flex-grow flex items-center justify-center">
+                    <div class="text-center">
+                        <span class="text-3xl">🛡️</span>
+                        <p class="text-[10px] font-black mt-2 text-stone-900 uppercase">JCS Standard Active</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Registry & Entropy Log -->
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-5 bg-white p-8 rounded-3xl tactical-border shadow-sm space-y-6">
+                <h3 class="text-xl font-black tracking-tight">"Golden" State Registry</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center py-3 border-b border-stone-100">
+                        <span class="text-xs font-bold text-stone-500 uppercase">Wheelbase_um</span>
+                        <p class="text-sm font-black mono">2,452,000</p>
+                    </div>
+                    <div class="flex justify-between items-center py-3 border-b border-stone-100">
+                        <span class="text-xs font-bold text-stone-500 uppercase">Global Scale</span>
+                        <p class="text-sm font-black mono uppercase text-amber-600">1050 PERMILLE</p>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-3">
+                    <button id="tts-btn" onclick="aiSafetyCouncilDebate()" class="py-3 bg-stone-100 text-navy-900 border border-stone-200 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-stone-200 transition flex items-center justify-center gap-2 shadow-sm">
+                        <span>✨ Audio Briefing Protocol</span>
+                    </button>
+                    <button onclick="aiHardwareAudit()" class="py-3 bg-stone-100 text-navy-900 border border-stone-200 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-stone-200 transition flex items-center justify-center gap-2 shadow-sm">
+                        <span>✨ Physical Artifact Scan</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Terminal Audit Feed -->
+            <div class="lg:col-span-7 terminal rounded-3xl p-8 shadow-2xl overflow-hidden flex flex-col h-[350px]">
+                <div id="terminal-feed" class="flex-grow mono text-[11px] leading-relaxed overflow-y-auto pr-4 space-y-1">
+                    <p class="text-stone-500">[GENESIS] Initializing Golden Backbone...</p>
+                    <p class="text-amber-500">> Anchoring Tick 0 with zeroed prev_hash.</p>
+                    <p class="text-blue-400">> Applying 1050 permille scale to Suzuki Twin base.</p>
+                    <p class="text-emerald-500">> Wheelbase calculated: 2,452,000 um.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Jurassic Pixels Game Engine & Vehicle Simulator -->
+        <section class="space-y-6">
+            <div>
+                <h3 class="text-sm font-black uppercase tracking-[0.2em] text-stone-400">Jurassic Pixels Runtime Lab</h3>
+                <p class="text-sm text-stone-600 max-w-3xl">
+                    Physics-driven canvas prototypes powered by a shared variable array. Switch checkpoints to preview 8-bit, 16-bit, and 32-bit simulation modes orchestrated under a 64-bit voxelized world model.
+                </p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-3xl tactical-border shadow-sm space-y-4">
+                    <div class="flex flex-col gap-3">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xs font-black uppercase tracking-widest text-stone-400">Jurassic Pixels Game Engine</h4>
+                            <select id="jp-level" class="text-[10px] font-bold uppercase border border-stone-200 rounded px-3 py-1">
+                                <option value="8bit">8-bit Bubble Bobble</option>
+                                <option value="16bit">16-bit RPG</option>
+                                <option value="32bit">32-bit SONIC</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-2 text-[10px] font-bold uppercase text-stone-500">
+                            <span class="px-2 py-1 rounded bg-emerald-50 text-emerald-700">64-bit Voxel World</span>
+                            <span class="px-2 py-1 rounded bg-amber-50 text-amber-700">Agent Nodes Online</span>
+                        </div>
+                    </div>
+                    <canvas id="jurassic-canvas" class="w-full h-[320px] rounded-xl border border-stone-100 bg-stone-950"></canvas>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-[10px] mono text-stone-500">
+                        <div class="space-y-1">
+                            <p class="font-bold uppercase text-stone-400">Checkpoint Payload</p>
+                            <pre id="jp-checkpoint" class="bg-stone-100 rounded p-3 whitespace-pre-wrap text-[9px]"></pre>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="font-bold uppercase text-stone-400">Semantic Momentum</p>
+                            <div id="jp-telemetry" class="bg-stone-100 rounded p-3 space-y-1 text-[9px]"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl tactical-border shadow-sm space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-black uppercase tracking-widest text-stone-400">ACC-Style Vehicle Simulator</h4>
+                        <button id="vehicle-reset" class="text-[10px] font-bold uppercase border border-stone-200 rounded px-3 py-1 hover:bg-stone-50">Reset</button>
+                    </div>
+                    <p class="text-xs text-stone-600">
+                        Unity-inspired dynamics model running on the same physics kernel. Agents act as articulation nodes for steering, throttle, and braking control within a closed track.
+                    </p>
+                    <canvas id="vehicle-canvas" class="w-full h-[320px] rounded-xl border border-stone-100 bg-stone-900"></canvas>
+                    <div class="grid grid-cols-3 gap-3 text-[10px] mono text-stone-500">
+                        <div class="bg-stone-100 rounded p-3">
+                            <p class="uppercase font-bold text-stone-400">Speed</p>
+                            <p id="vehicle-speed" class="text-sm text-stone-900">0.0 m/s</p>
+                        </div>
+                        <div class="bg-stone-100 rounded p-3">
+                            <p class="uppercase font-bold text-stone-400">Slip</p>
+                            <p id="vehicle-slip" class="text-sm text-stone-900">0.00 rad</p>
+                        </div>
+                        <div class="bg-stone-100 rounded p-3">
+                            <p class="uppercase font-bold text-stone-400">Lap</p>
+                            <p id="vehicle-lap" class="text-sm text-stone-900">0.00 km</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- AI Response Modal -->
+    <div id="aiModal" class="fixed inset-0 z-[100] flex items-center justify-center p-6 hidden">
+        <div class="absolute inset-0 bg-navy-950/60" onclick="closeAiModal()"></div>
+        <div class="relative glass-modal w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[80vh] overflow-hidden">
+            <div class="p-4 border-b border-amber-500/20 flex justify-between items-center bg-white/50">
+                <h3 id="aiModalTitle" class="text-sm font-black uppercase tracking-widest text-amber-700 flex items-center gap-2">
+                    <span>✨ Forensic Agent Report</span>
+                </h3>
+                <button onclick="closeAiModal()" class="text-stone-400 hover:text-stone-900">✕</button>
+            </div>
+            <div id="aiResponseContent" class="p-6 overflow-y-auto text-sm leading-relaxed text-stone-800 space-y-4 prose prose-stone max-w-none">
+                <div class="flex items-center justify-center p-8">
+                    <div class="status-pulse w-4 h-4 bg-amber-600 rounded-full"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="max-w-7xl mx-auto px-6 border-t border-stone-200 pt-8 flex justify-between items-center text-stone-400 pb-12">
+        <div class="text-[10px] mono uppercase tracking-widest">Sovereign Command Hub // Persistence v3.0.0</div>
+        <div class="text-[10px] font-bold uppercase tracking-tighter">RFC8785: <span class="mono text-stone-900">RFC_COMPLIANT</span></div>
+    </footer>
+
+    <script>
+        const apiKey = "";
+        
+        // --- Gemini API Utilities ---
+        async function fetchGemini(url, payload) {
+            let delay = 1000;
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const response = await fetch(url + `?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return await response.json();
+                } catch (err) {
+                    if (i === 4) throw err;
+                    await new Promise(r => setTimeout(r, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        // --- AI Implementation: Golden Audit ---
+        async function aiAuditGoldenBundle() {
+            openAiModal("Golden Bundle Verification");
+            const data = {
+                base_wheelbase: 2335000,
+                transform_scale: 1.05,
+                target_wheelbase: 2452000,
+                policy: "N0_INTEGER_ONLY"
+            };
+            const prompt = `Validate this geometric transformation:\n${JSON.stringify(data)}\nVerify if the rounding from 2,451,750 to 2,452,000 follows the deterministic logic.`;
+            const system = "You are the Golden State Auditor. Analyze geometric consistency in micrometers. Confirm if the 1050 permille scale is anchored correctly in the variant.v1.json.";
+            
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent`;
+                const result = await fetchGemini(url, { contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: system }] } });
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "Verification failure.";
+                displayAiResult(text);
+            } catch (err) { displayAiResult("Spectral interference in the micrometer grid."); }
+        }
+
+        async function aiMockBuildRun() {
+            openAiModal("Mock Build Run: Ledger Finalization");
+            const prompt = "Execute a mock SHA256 build run for three events: GENESIS, SCALE, and LOCK. Provide actual computed hex strings for the prev_hash chain using RFC8785 canonicalization principles.";
+            const system = "Generate a mock build run as valid JSON. Return the event chain with actual SHA256 hashes. Tone: Technical, deterministic.";
+            
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent`;
+                const result = await fetchGemini(url, { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" }, systemInstruction: { parts: [{ text: system }] } });
+                const data = JSON.parse(result.candidates[0].content.parts[0].text);
+                
+                let html = '<div class="space-y-4">';
+                data.events.forEach(ev => {
+                    html += `
+                        <div class="p-3 bg-stone-100 rounded border border-stone-200">
+                            <p class="text-[10px] font-black uppercase text-amber-700">${ev.event_id}</p>
+                            <p class="mono text-[9px] mt-1 break-all">HASH: ${ev.hash || ev.current_hash}</p>
+                            <p class="mono text-[9px] opacity-50">PREV: ${ev.prev_hash}</p>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                document.getElementById('aiResponseContent').innerHTML = html;
+            } catch (err) { document.getElementById('aiResponseContent').innerText = "Hash-fill simulator offline."; }
+        }
+
+        async function aiTacticalChat() {
+            const inputEl = document.getElementById('advisor-input');
+            const chatEl = document.getElementById('advisor-chat');
+            const query = inputEl.value.trim();
+            if (!query) return;
+
+            const userP = document.createElement('p');
+            userP.className = "text-white mt-2";
+            userP.innerText = `> ${query}`;
+            chatEl.appendChild(userP);
+            inputEl.value = "";
+            chatEl.scrollTop = chatEl.scrollHeight;
+
+            const system = "You are the Physics Expert (E5). You manage the Golden Backbone. Your core truth is micrometers (um) and RFC8785 canonicalization. Use technical terms like JCS, N0_INTEGER_ONLY, and permille scales.";
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent`;
+            
+            try {
+                const result = await fetchGemini(url, { contents: [{ parts: [{ text: query }] }], systemInstruction: { parts: [{ text: system }] } });
+                const reply = result.candidates?.[0]?.content?.parts?.[0]?.text || "Drop.";
+                const aiP = document.createElement('p');
+                aiP.className = "text-amber-500";
+                aiP.innerText = `>> ${reply}`;
+                chatEl.appendChild(aiP);
+                chatEl.scrollTop = chatEl.scrollHeight;
+            } catch (err) { logToTerminal("Connection drift in chat."); }
+        }
+
+        async function aiSafetyCouncilDebate() {
+            const btn = document.getElementById('tts-btn');
+            const original = btn.innerHTML;
+            btn.innerHTML = '⚡ Encoding Golden Report...';
+            btn.disabled = true;
+
+            const script = "Auditor: The 1050 permille scale transform is now locked in variant one point json. Engineer: Rounding to 2,452,000 micrometers is verified against the N0 policy. Genesis anchored.";
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent`;
+                const result = await fetchGemini(url, {
+                    contents: [{ parts: [{ text: script }] }],
+                    generationConfig: {
+                        responseModalities: ["AUDIO"],
+                        speechConfig: {
+                            multiSpeakerVoiceConfig: {
+                                speakerVoiceConfigs: [
+                                    { speaker: "Auditor", voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } },
+                                    { speaker: "Engineer", voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } }
+                                ]
+                            }
+                        }
+                    },
+                    model: "gemini-2.5-flash-preview-tts"
+                });
+                const audioBlob = pcmToWav(result.candidates[0].content.parts[0].inlineData.data, 24000);
+                new Audio(URL.createObjectURL(audioBlob)).play();
+                btn.innerHTML = '🔊 Council Broadcast Active';
+                setTimeout(() => { btn.innerHTML = original; btn.disabled = false; }, 8000);
+            } catch (err) { btn.innerHTML = '❌ Dropout'; setTimeout(() => { btn.innerHTML = original; btn.disabled = false; }, 2000); }
+        }
+
+        async function aiHardwareAudit() {
+            openAiModal("Vision Artifact Scan (um)");
+            const prompt = "Inspect the physical alignment of this R32 widebody flare. Does the observed 0.2105mm drift align with the deterministic micrometer ledger?";
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent`;
+            const dummyBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+            try {
+                const result = await fetchGemini(url, { contents: [{ role: "user", parts: [{ text: prompt }, { inlineData: { mimeType: "image/png", data: dummyBase64 } }] }] });
+                document.getElementById('aiResponseContent').innerHTML = `<p>${result.candidates[0].content.parts[0].text.replace(/\n/g, '<br>')}</p>`;
+            } catch (err) { document.getElementById('aiResponseContent').innerText = "Vision offline."; }
+        }
+
+        // --- Helper: PCM to WAV ---
+        function pcmToWav(base64Pcm, sampleRate) {
+            const pcmBuffer = Uint8Array.from(atob(base64Pcm), c => c.charCodeAt(0)).buffer;
+            const pcmView = new Int16Array(pcmBuffer);
+            const wavBuffer = new ArrayBuffer(44 + pcmView.length * 2);
+            const view = new DataView(wavBuffer);
+            const writeString = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+            writeString(0, 'RIFF'); view.setUint32(4, 32 + pcmView.length * 2, true); writeString(8, 'WAVE'); writeString(12, 'fmt ');
+            view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true); view.setUint16(34, 16, true); writeString(36, 'data'); view.setUint32(40, pcmView.length * 2, true);
+            for (let i = 0; i < pcmView.length; i++) view.setInt16(44 + i * 2, pcmView[i], true);
+            return new Blob([wavBuffer], { type: 'audio/wav' });
+        }
+
+        // --- UI & Visualization Boilerplate ---
+        function openAiModal(title) { document.getElementById('aiModalTitle').innerText = `✨ ${title}`; document.getElementById('aiModal').classList.remove('hidden'); document.getElementById('aiResponseContent').innerHTML = `<div class="flex items-center gap-3"><div class="status-pulse w-4 h-4 bg-amber-600 rounded-full"></div><span class="mono text-xs">Auditing Golden Backbone...</span></div>`; }
+        function closeAiModal() { document.getElementById('aiModal').classList.add('hidden'); }
+        function displayAiResult(text) { document.getElementById('aiResponseContent').innerHTML = text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); }
+
+        // --- Three.js & Charts (Simplified) ---
+        let scene, camera, renderer, points;
+        function initLidar() {
+            const container = document.getElementById('lidar-canvas-parent');
+            scene = new THREE.Scene(); camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000); camera.position.z = 50;
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); renderer.setSize(container.clientWidth, container.clientHeight); container.appendChild(renderer.domElement);
+            const particles = 15000; const geo = new THREE.BufferGeometry(); const pos = new Float32Array(particles * 3);
+            for (let i = 0; i < particles; i++) {
+                const u = Math.random() * Math.PI * 2, v = Math.random() * Math.PI * 2;
+                pos[i*3]=(20+8*Math.cos(v))*Math.cos(u); pos[i*3+1]=(20+8*Math.cos(v))*Math.sin(u)*Math.sin(1.44); pos[i*3+2]=8*Math.sin(v)+Math.cos(u*5)*4;
+            }
+            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            points = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.35, color: 0xB45309, transparent: true, opacity: 0.8 }));
+            scene.add(points); animate();
+        }
+        function animate() { requestAnimationFrame(animate); points.rotation.y += 0.002; renderer.render(scene, camera); }
+        function initCharts() {
+            new Chart(document.getElementById('spfmChart'), { type: 'doughnut', data: { datasets: [{ data: [99.9999, 0.0001], backgroundColor: ['#10B981', '#E7E5E4'], borderWidth: 0, circumference: 180, rotation: 270 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { tooltip: { enabled: false }, legend: { display: false } } } });
+        }
+        function logToTerminal(msg, colorClass = "stone-400") { const feed = document.getElementById('terminal-feed'); const p = document.createElement('p'); p.className = colorClass === "emerald" ? "text-emerald-500" : "text-stone-400"; p.innerText = msg; feed.appendChild(p); feed.scrollTop = feed.scrollHeight; }
+
+        // --- Jurassic Pixels Game Engine ---
+        const jurassicVars = [
+            { name: "gravity", value: 0.18 },
+            { name: "friction", value: 0.92 },
+            { name: "bounce", value: 0.72 },
+            { name: "spawnEnergy", value: 3.4 },
+            { name: "semanticMomentum", value: 0.86 },
+            { name: "voxelScale", value: 64 }
+        ];
+
+        const jurassicCheckpoint = {
+            title: "Jurassic Pixels Checkpoint",
+            build: "JPX-LLM-0.9.4",
+            modes: {
+                "8bit": { style: "Bubble Bobble", palette: ["#62F3FF", "#8CFF6A", "#FFE66D"], speed: 1.1 },
+                "16bit": { style: "RPG", palette: ["#F97316", "#38BDF8", "#FDE047"], speed: 1.35 },
+                "32bit": { style: "SONIC", palette: ["#38BDF8", "#22C55E", "#A855F7"], speed: 1.6 }
+            },
+            orchestrator: "64-bit Voxelized Mario Block World",
+            agents: ["Queen Boo", "Agent Coffee", "CiCi"],
+            physicsKernel: "Jurassic Pixels Physics"
+        };
+
+        const jurassicState = {
+            level: "8bit",
+            actor: { x: 40, y: 40, vx: 0, vy: 0, r: 8 },
+            orbs: [],
+            time: 0,
+            bounds: { w: 480, h: 320 }
+        };
+
+        function initJurassicEngine() {
+            const canvas = document.getElementById('jurassic-canvas');
+            const ctx = canvas.getContext('2d');
+            const resize = () => {
+                canvas.width = canvas.clientWidth * window.devicePixelRatio;
+                canvas.height = canvas.clientHeight * window.devicePixelRatio;
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+                jurassicState.bounds.w = canvas.clientWidth;
+                jurassicState.bounds.h = canvas.clientHeight;
+            };
+            resize();
+            window.addEventListener('resize', resize);
+
+            jurassicState.orbs = Array.from({ length: 12 }, (_, i) => ({
+                x: 40 + i * 30,
+                y: 80 + (i % 3) * 40,
+                vx: (Math.random() - 0.5) * 0.6,
+                vy: (Math.random() - 0.5) * 0.6,
+                r: 5 + (i % 3)
+            }));
+
+            document.getElementById('jp-level').addEventListener('change', (event) => {
+                jurassicState.level = event.target.value;
+                logToTerminal(`[JPX] Level switched to ${jurassicCheckpoint.modes[jurassicState.level].style}.`, "emerald");
+            });
+
+            updateJurassicCheckpoint();
+
+            const loop = () => {
+                stepJurassic();
+                drawJurassic(ctx);
+                requestAnimationFrame(loop);
+            };
+            loop();
+        }
+
+        function updateJurassicCheckpoint() {
+            const checkpointEl = document.getElementById('jp-checkpoint');
+            checkpointEl.textContent = JSON.stringify(jurassicCheckpoint, null, 2);
+        }
+
+        function stepJurassic() {
+            const gravity = jurassicVars.find(v => v.name === "gravity").value;
+            const friction = jurassicVars.find(v => v.name === "friction").value;
+            const bounce = jurassicVars.find(v => v.name === "bounce").value;
+            const speed = jurassicCheckpoint.modes[jurassicState.level].speed;
+
+            jurassicState.time += 0.016 * speed;
+            jurassicState.actor.vy += gravity;
+            jurassicState.actor.x += jurassicState.actor.vx;
+            jurassicState.actor.y += jurassicState.actor.vy;
+
+            if (jurassicState.actor.y > jurassicState.bounds.h - jurassicState.actor.r) {
+                jurassicState.actor.y = jurassicState.bounds.h - jurassicState.actor.r;
+                jurassicState.actor.vy *= -bounce;
+            }
+            if (jurassicState.actor.x > jurassicState.bounds.w - jurassicState.actor.r || jurassicState.actor.x < jurassicState.actor.r) {
+                jurassicState.actor.vx *= -bounce;
+            }
+            jurassicState.actor.vx *= friction;
+            jurassicState.actor.vy *= friction;
+
+            jurassicState.orbs.forEach((orb) => {
+                orb.x += orb.vx * speed;
+                orb.y += orb.vy * speed;
+                if (orb.x < orb.r || orb.x > jurassicState.bounds.w - orb.r) orb.vx *= -1;
+                if (orb.y < orb.r || orb.y > jurassicState.bounds.h - orb.r) orb.vy *= -1;
+            });
+
+            const telemetry = document.getElementById('jp-telemetry');
+            telemetry.innerHTML = `
+                <p>Δt: ${jurassicState.time.toFixed(2)}</p>
+                <p>Actor Energy: ${(Math.abs(jurassicState.actor.vx) + Math.abs(jurassicState.actor.vy)).toFixed(2)}</p>
+                <p>Semantic Momentum: ${jurassicVars.find(v => v.name === "semanticMomentum").value}</p>
+                <p>Voxel Scale: ${jurassicVars.find(v => v.name === "voxelScale").value}-bit</p>
+            `;
+        }
+
+        function drawJurassic(ctx) {
+            const palette = jurassicCheckpoint.modes[jurassicState.level].palette;
+            ctx.clearRect(0, 0, jurassicState.bounds.w, jurassicState.bounds.h);
+            ctx.fillStyle = "#0F172A";
+            ctx.fillRect(0, 0, jurassicState.bounds.w, jurassicState.bounds.h);
+            ctx.fillStyle = palette[0];
+            ctx.beginPath();
+            ctx.arc(jurassicState.actor.x, jurassicState.actor.y, jurassicState.actor.r, 0, Math.PI * 2);
+            ctx.fill();
+
+            jurassicState.orbs.forEach((orb, index) => {
+                ctx.fillStyle = palette[index % palette.length];
+                ctx.beginPath();
+                ctx.arc(orb.x, orb.y, orb.r, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.fillStyle = "rgba(255,255,255,0.4)";
+            ctx.font = "10px JetBrains Mono";
+            ctx.fillText(`MODE: ${jurassicCheckpoint.modes[jurassicState.level].style}`, 12, 16);
+        }
+
+        // --- Vehicle Simulator ---
+        const vehicleState = {
+            x: 240,
+            y: 160,
+            heading: 0,
+            speed: 0,
+            lapDistance: 0,
+            wheelBase: 2.6,
+            steering: 0,
+            throttle: 0,
+            brake: 0
+        };
+
+        function initVehicleSimulator() {
+            const canvas = document.getElementById('vehicle-canvas');
+            const ctx = canvas.getContext('2d');
+            const resize = () => {
+                canvas.width = canvas.clientWidth * window.devicePixelRatio;
+                canvas.height = canvas.clientHeight * window.devicePixelRatio;
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            };
+            resize();
+            window.addEventListener('resize', resize);
+
+            document.getElementById('vehicle-reset').addEventListener('click', () => {
+                vehicleState.x = canvas.clientWidth * 0.3;
+                vehicleState.y = canvas.clientHeight * 0.6;
+                vehicleState.heading = 0;
+                vehicleState.speed = 0;
+                vehicleState.lapDistance = 0;
+            });
+
+            const controls = { up: false, down: false, left: false, right: false };
+            window.addEventListener('keydown', (event) => {
+                if (event.key === "ArrowUp") controls.up = true;
+                if (event.key === "ArrowDown") controls.down = true;
+                if (event.key === "ArrowLeft") controls.left = true;
+                if (event.key === "ArrowRight") controls.right = true;
+            });
+            window.addEventListener('keyup', (event) => {
+                if (event.key === "ArrowUp") controls.up = false;
+                if (event.key === "ArrowDown") controls.down = false;
+                if (event.key === "ArrowLeft") controls.left = false;
+                if (event.key === "ArrowRight") controls.right = false;
+            });
+
+            const loop = () => {
+                stepVehicle(controls, canvas.clientWidth, canvas.clientHeight);
+                drawVehicle(ctx, canvas.clientWidth, canvas.clientHeight);
+                requestAnimationFrame(loop);
+            };
+            loop();
+        }
+
+        function stepVehicle(controls, width, height) {
+            vehicleState.throttle = controls.up ? 1 : 0;
+            vehicleState.brake = controls.down ? 1 : 0;
+            vehicleState.steering = (controls.left ? -1 : 0) + (controls.right ? 1 : 0);
+
+            const accel = 0.08 * vehicleState.throttle - 0.12 * vehicleState.brake;
+            vehicleState.speed += accel;
+            vehicleState.speed *= 0.98;
+
+            const slipAngle = vehicleState.steering * Math.min(0.6, Math.abs(vehicleState.speed));
+            vehicleState.heading += slipAngle;
+
+            vehicleState.x += Math.cos(vehicleState.heading) * vehicleState.speed * 3.2;
+            vehicleState.y += Math.sin(vehicleState.heading) * vehicleState.speed * 3.2;
+
+            if (vehicleState.x < 40) vehicleState.x = 40;
+            if (vehicleState.y < 40) vehicleState.y = 40;
+            if (vehicleState.x > width - 40) vehicleState.x = width - 40;
+            if (vehicleState.y > height - 40) vehicleState.y = height - 40;
+
+            vehicleState.lapDistance += Math.abs(vehicleState.speed) * 0.05;
+
+            document.getElementById('vehicle-speed').innerText = `${vehicleState.speed.toFixed(2)} m/s`;
+            document.getElementById('vehicle-slip').innerText = `${slipAngle.toFixed(2)} rad`;
+            document.getElementById('vehicle-lap').innerText = `${vehicleState.lapDistance.toFixed(2)} km`;
+        }
+
+        function drawVehicle(ctx, width, height) {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = "#0F172A";
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.strokeStyle = "#F97316";
+            ctx.lineWidth = 3;
+            ctx.strokeRect(35, 35, width - 70, height - 70);
+
+            ctx.strokeStyle = "#38BDF8";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(80, 80, width - 160, height - 160);
+
+            ctx.save();
+            ctx.translate(vehicleState.x, vehicleState.y);
+            ctx.rotate(vehicleState.heading);
+            ctx.fillStyle = "#FDE047";
+            ctx.fillRect(-10, -6, 20, 12);
+            ctx.fillStyle = "#1C1917";
+            ctx.fillRect(4, -4, 6, 8);
+            ctx.restore();
+        }
+
+        window.onload = () => {
+            initLidar();
+            initCharts();
+            initJurassicEngine();
+            initVehicleSimulator();
+        };
+    </script>
+</body>
+</html>

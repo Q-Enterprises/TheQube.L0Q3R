@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://world-engine/contracts/ScenarioSpec.v1.schema.json",
+  "title": "ScenarioSpec.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "scenario_id",
+    "display_name",
+    "track_ref",
+    "duration_ticks"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "ScenarioSpec.v1" },
+    "scenario_id": { "type": "string", "minLength": 1 },
+    "display_name": { "type": "string", "minLength": 1 },
+    "track_ref": { "type": "string", "minLength": 1 },
+    "duration_ticks": { "type": "integer", "minimum": 1 }
+  }
+}
