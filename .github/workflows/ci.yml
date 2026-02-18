@@ -1,0 +1,48 @@
+name: cie-audit-ci
+on:
+  workflow_dispatch: {}
+
+jobs:
+  validate-cie-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Fetch LFS assets
+        run: |
+          git lfs install --local
+          git lfs pull
+
+      - name: Set up Python
+        uses: actions/setup-node@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pynacl  # Correct PyPI package name
+
+      - name: Run CIE V1 Validator
+        id: validator
+        run: |
+          chmod +x scripts/validate_cie_v1_audit_bundle.py
+          python scripts/validate_cie_v1_audit_bundle.py \
+           --payloads inputs/cie_v1_audit/payloads.ndjson \
+           --receipts ledger/cie_v1/neutrality_receipts.jsonl
+        env:
+          GITHUB_TOKEN: ${{ secrets.SKULLKEY }} # Use the SkullKey secret [cite: 38]
+
+      - name: Trigger Zapier Webhook
+        if: always()
+        run: |
+          curl -X POST https://hooks.zapier.com/hooks/catch/YOUR_ZAPIER_ID/ \
+           -H "Content-Type: application/json" \
+           -d '{
+              "status": "${{ job.status }}",
+              "run_id": "${{ github.run_id }}",
+              "repo": "${{ github.repository }}"
+           }'

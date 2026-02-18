@@ -22,7 +22,7 @@
   "modules": [
     {
       "module_id": "synthetic.noise.injector.v1",
-      "role": "Generates neutral perturbations across text, audio, and vision payloads without introducing semantic bias.",
+      "role": "Generates neutral perturbations across text, audio, and vision payloads without introducing semantic bias (supersedes legacy CNE/FSV logic).",
       "inputs": ["content_payload", "integrity_profile"],
       "outputs": ["perturbed_payload"],
       "parameters": {
@@ -33,7 +33,7 @@
     },
     {
       "module_id": "synthetic.contradiction.synth.v1",
-      "role": "Synthesizes neutral contradictions to challenge factual assertions while respecting ethical guardrails.",
+      "role": "Synthesizes neutral contradictions to challenge factual assertions while respecting ethical guardrails (supersedes legacy CNE/FSV logic).",
       "inputs": ["perturbed_payload", "knowledge_base"],
       "outputs": ["challenge_set"],
       "parameters": {
@@ -43,6 +43,33 @@
       }
     }
   ],
+  "audit_inputs": {
+    "required_fields": [
+      "audit_id",
+      "payload_uri",
+      "integrity_profile",
+      "seed_u64",
+      "knowledge_base_ref"
+    ],
+    "seed_format": "u64_string",
+    "deterministic": true,
+    "notes": "All inputs must be immutable and referenced by content addressable URIs to preserve zero-drift guarantees."
+  },
+  "validation": {
+    "envelope_schema": "ValidationJobEnvelope.v1",
+    "anchor_schema": "BatchAnchor.v1",
+    "tick_schema": "Tick.v1",
+    "tick_kind": "VALIDATION",
+    "digest_rule": "sha256(canonical_json(excluding digest))",
+    "storage_paths": [
+      "/validation/schemas/",
+      "/validation/envelopes/",
+      "/validation/anchors/",
+      "/validation/organs/",
+      "/validation/fossils/",
+      "/validation/ticks/"
+    ]
+  },
   "pipelines": [
     {
       "name": "cie_v1_audit",
