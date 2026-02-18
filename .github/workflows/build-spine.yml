@@ -2,7 +2,8 @@ name: Build Spine Accelerated Epoch
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   # Trigger every 30 minutes for automated waypoint generation
   schedule:
     - cron: '*/30 * * * *'
@@ -11,6 +12,7 @@ jobs:
   epoch-generation:
     name: Generate Epoch & Map Waypoints
     runs-on: ubuntu-latest
+
     defaults:
       run:
         working-directory: ./
@@ -19,7 +21,8 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Maintain full lineage for audit
+          # Maintain full lineage for audit
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4

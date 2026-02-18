@@ -1,0 +1,85 @@
+services:
+  # ============================================================================
+  # Infrastructure
+  # ============================================================================
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:6333/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================================
+  # Application Services
+  # ============================================================================
+
+  ingest-api:
+    build:
+      context: ./services/ingest-api
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  docling-worker:
+    build:
+      context: .
+      dockerfile: ./services/docling-worker/Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      replicas: 2
+    volumes:
+      - ./lib:/app/lib:ro
+      - ./schemas:/app/schemas:ro
+
+  embed-worker:
+    build:
+      context: .
+      dockerfile: ./services/embed-worker/Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+    depends_on:
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    deploy:
+      replicas: 2
+    volumes:
+      - ./lib:/app/lib:ro
+      - ./schemas:/app/schemas:ro
+
+volumes:
+  qdrant_data:
