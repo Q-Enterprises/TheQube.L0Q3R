@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://world-engine/contracts/WorldStateFrame.v1.schema.json",
+  "title": "WorldStateFrame.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "tick",
+    "time_sec",
+    "entities",
+    "state_hash"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "WorldStateFrame.v1" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "tick": { "type": "integer", "minimum": 0 },
+    "time_sec": { "type": "number", "minimum": 0 },
+    "entities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["entity_id", "type", "pose"],
+        "properties": {
+          "entity_id": { "type": "string", "minLength": 1 },
+          "type": {
+            "type": "string",
+            "enum": ["AVATAR", "VEHICLE", "PROP", "SENSOR", "INCIDENT_EMITTER"]
+          },
+          "pose": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["x_mm", "y_mm", "z_mm", "yaw_microrad"],
+            "properties": {
+              "x_mm": { "type": "integer" },
+              "y_mm": { "type": "integer" },
+              "z_mm": { "type": "integer" },
+              "yaw_microrad": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    "state_hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}
