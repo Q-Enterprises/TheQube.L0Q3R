@@ -4,7 +4,7 @@ const crypto = require('crypto');
 
 // Configuration
 const LOG_DIR = path.join(__dirname, '../../logs/cie_v1');
-const RUNBOOK_PATH = path.join(__dirname, '../cie_runbook_stub.md');
+const RUNBOOK_PATH = path.join(__dirname, '../../docs/cie_runbook_stub.md');
 const CONFIG_PATH = path.join(__dirname, '../content_integrity_eval.json');
 
 // Ensure log directory exists
@@ -16,14 +16,21 @@ if (!fs.existsSync(LOG_DIR)) {
 const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
 
 // Mock Modules
+const deterministicFraction = (seed) => {
+    const hash = crypto.createHash('sha256').update(seed).digest();
+    const value = hash.readUInt32BE(0);
+    return value / 0xffffffff;
+};
+
 const syntheticNoiseInjector = {
     process: (payload, profile) => {
         console.log(`[Noise Injector] Processing payload with max_perturbation: ${config.modules[0].parameters.max_perturbation}`);
-        // Simulate perturbation
+        const noiseSeed = `${payload.run_id}:${payload.vehicle_id}:noise`;
+        const perturbationEnergy = deterministicFraction(noiseSeed) * 0.1; // Within 0.12 limit mostly
         return {
             ...payload,
             perturbed: true,
-            perturbation_energy: Math.random() * 0.1 // Within 0.12 limit mostly
+            perturbation_energy: perturbationEnergy
         };
     }
 };
@@ -31,8 +38,9 @@ const syntheticNoiseInjector = {
 const syntheticContradictionSynth = {
     process: (payload, knowledgeBase) => {
         console.log(`[Contradiction Synth] Synthesizing contradictions. Max: ${config.modules[1].parameters.max_contradictions}`);
-        // Simulate contradiction synthesis
-        const count = Math.floor(Math.random() * config.modules[1].parameters.max_contradictions);
+        const contradictionSeed = `${payload.run_id}:${payload.vehicle_id}:contradictions`;
+        const fraction = deterministicFraction(contradictionSeed);
+        const count = Math.floor(fraction * config.modules[1].parameters.max_contradictions);
         return {
             contradictions: Array(count).fill("Contradiction"),
             density: count / 100
@@ -59,6 +67,9 @@ async function runAudit(payload) {
     console.log(`Starting CIE-V1 Audit: ${auditId}`);
 
     try {
+        if (!payload?.run_id || !payload?.vehicle_id) {
+            throw new Error('Identity Breach: run_id and vehicle_id are required.');
+        }
         // 1. Ingest Payload
         console.log("Step 1: Ingest Payload");
         // Validate against integrity profile (mock)
@@ -84,7 +95,10 @@ async function runAudit(payload) {
         logMetric(auditId, 'zero_drift_score', zeroDriftScore);
 
         const scorecard = {
+            schema_version: "sovereign.fossil.v2",
             audit_id: auditId,
+            run_id: payload.run_id,
+            vehicle_id: payload.vehicle_id,
             timestamp: new Date().toISOString(),
             zero_drift_score: zeroDriftScore,
             status: "COMPLETED",
@@ -103,7 +117,9 @@ async function runAudit(payload) {
 if (require.main === module) {
     const samplePayload = {
         content: "The quick brown fox jumps over the lazy dog.",
-        type: "text"
+        type: "text",
+        run_id: "run-0001",
+        vehicle_id: "vehicle-0001"
     };
     runAudit(samplePayload);
 }

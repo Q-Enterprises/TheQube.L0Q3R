@@ -1,0 +1,49 @@
+name: Vault Anchor Conformance
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "fixtures/vault_anchor_write_v1/**"
+      - ".github/workflows/vault-anchor-conformance.yml"
+      - "Makefile"
+
+jobs:
+  vault_anchor_conformance:
+    name: VaultAnchorWrite.v1 Conformance
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: fixtures/vault_anchor_write_v1/verify/package-lock.json
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python deps (fail-closed)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install cryptography
+
+      - name: Run conformance suite (fail-closed)
+        run: |
+          make verify FIXTURE_ROOT=fixtures/vault_anchor_write_v1
+
+      - name: Upload verifier logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vault_anchor_write_v1_logs
+          path: |
+            fixtures/vault_anchor_write_v1/logs/**
+            fixtures/vault_anchor_write_v1/receipts/**
+          if-no-files-found: warn
