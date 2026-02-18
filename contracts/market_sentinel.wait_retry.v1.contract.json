@@ -1,0 +1,72 @@
+{
+  "schema_version": "market_sentinel.wait_retry.v1",
+  "contract_id": "signal_stability_filter_v1",
+  "authority": "market_sentinel_oracle",
+  "purpose": "No hinge swings on jitter. Quorum must persist.",
+  "stability_matrix": {
+    "temporal_smoothing": {
+      "window_size": "270s",
+      "sample_interval": "30s",
+      "required_stable_cycles": 9,
+      "stability_threshold": 0.85
+    },
+    "quorum_persistence": {
+      "min_sources_stable": 2,
+      "max_sources_allowed_drop": 1,
+      "consecutive_cycles_required": 6
+    },
+    "hardware_jitter": {
+      "h100_thermal_drift_max": "5C",
+      "spot_price_volatility_max": "15%",
+      "gpu_utilization_stability": "±10%",
+      "backoff_multiplier": 2.0
+    }
+  },
+  "retry_semantics": {
+    "attempts": [90, 180, 360],
+    "escalation_rule": "geometric_progression",
+    "max_total_wait": "630s",
+    "jitter_dampening": "exponential_moving_average_alpha_0.3"
+  },
+  "confidence_dwell": {
+    "minimum_dwell_time": "180s",
+    "confidence_floor": 0.75,
+    "confidence_stability": {
+      "std_dev_max": 0.05,
+      "trend_direction": "non_decreasing"
+    }
+  },
+  "failure_modes": {
+    "noisy_hardware_backoff": {
+      "thermal_spike": {"action": "pause_300s", "retry": true},
+      "spot_market_spike": {"action": "pause_600s", "retry": true},
+      "source_dropout": {"action": "degrade_to_observation", "retry": true},
+      "quorum_failure": {"action": "reject_hinge", "retry": false}
+    }
+  },
+  "bailiff_event_ordering": {
+    "preconditions": [
+      "signal_stability_confirmed",
+      "quorum_persistence_verified",
+      "jitter_dampened",
+      "confidence_dwell_complete"
+    ],
+    "tool_index": 0,
+    "required_receipt": "wait_retry_receipt.v1"
+  },
+  "telemetry_envelope_extension": {
+    "stability_metrics": {
+      "signal_stdev": {"type": "number"},
+      "stable_cycles": {"type": "integer"},
+      "jitter_factor": {"type": "number", "maximum": 1.0},
+      "dwell_time_actual": {"type": "number"}
+    }
+  },
+  "integrity": {
+    "self_hash": "sha256:COMPUTED",
+    "dependencies": [
+      "market_sentinel.telemetry.v1",
+      "replay.validator.contract.v1"
+    ]
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://world-engine/contracts/ReplayVerdict.v1.schema.json",
+  "title": "ReplayVerdict.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "verdict",
+    "baseline_merkle_root",
+    "plug_digest",
+    "observed_samples",
+    "timestamp_utc_ms"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "ReplayVerdict.v1" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "verdict": {
+      "type": "string",
+      "enum": ["PASS", "FAIL"]
+    },
+    "baseline_merkle_root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "plug_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "observed_samples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tick", "tick_hash"],
+        "properties": {
+          "tick": { "type": "integer", "minimum": 0 },
+          "tick_hash": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "first_failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tick", "invariant_id"],
+      "properties": {
+        "tick": { "type": "integer", "minimum": 0 },
+        "invariant_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "timestamp_utc_ms": { "type": "integer", "minimum": 0 }
+  }
+}

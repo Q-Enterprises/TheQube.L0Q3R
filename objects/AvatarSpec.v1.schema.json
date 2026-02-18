@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://world-engine/contracts/AvatarSpec.v1.schema.json",
+  "title": "AvatarSpec.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "avatar_id",
+    "display_name",
+    "controller_mode"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "AvatarSpec.v1" },
+    "avatar_id": { "type": "string", "minLength": 1 },
+    "display_name": { "type": "string", "minLength": 1 },
+    "controller_mode": {
+      "type": "string",
+      "enum": ["REPLAY", "DETERMINISTIC_POLICY"]
+    }
+  }
+}
