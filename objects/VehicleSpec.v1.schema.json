@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://world-engine/contracts/VehicleSpec.v1.schema.json",
+  "title": "VehicleSpec.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "vehicle_id",
+    "display_name",
+    "mass_kg",
+    "inertia_tensor",
+    "cg_offset_m",
+    "powertrain",
+    "tires",
+    "aero",
+    "differential",
+    "dynamics_flags"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "VehicleSpec.v1"
+    },
+    "vehicle_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "display_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mass_kg": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "inertia_tensor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ixx", "iyy", "izz"],
+      "properties": {
+        "ixx": { "type": "number", "exclusiveMinimum": 0 },
+        "iyy": { "type": "number", "exclusiveMinimum": 0 },
+        "izz": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "cg_offset_m": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "z"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "z": { "type": "number" }
+      }
+    },
+    "powertrain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["layout", "max_power_kw", "torque_curve"],
+      "properties": {
+        "layout": {
+          "type": "string",
+          "enum": ["FWD", "RWD", "AWD"]
+        },
+        "max_power_kw": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "torque_curve": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["rpm", "torque_nm"],
+            "properties": {
+              "rpm": { "type": "number", "minimum": 0 },
+              "torque_nm": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    "tires": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "friction_coeff", "slip_curve"],
+      "properties": {
+        "model": {
+          "type": "string",
+          "enum": ["PACEJKA_SIMPLE", "LINEAR", "TABLE"]
+        },
+        "friction_coeff": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "slip_curve": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["slip", "mu"],
+            "properties": {
+              "slip": { "type": "number" },
+              "mu": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    "aero": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cd", "cl_front", "cl_rear", "ref_area_m2"],
+      "properties": {
+        "cd": { "type": "number", "minimum": 0 },
+        "cl_front": { "type": "number" },
+        "cl_rear": { "type": "number" },
+        "ref_area_m2": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "differential": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["OPEN", "LSD", "E_DIFF"]
+        }
+      }
+    },
+    "dynamics_flags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stability_control", "traction_control"],
+      "properties": {
+        "stability_control": { "type": "boolean" },
+        "traction_control": { "type": "boolean" }
+      }
+    }
+  }
+}

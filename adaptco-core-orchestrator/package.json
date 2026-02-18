@@ -5,7 +5,10 @@
   "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "audit": "node src/audit.js"
+    "audit": "node src/audit.js",
+    "rehearsal": "node src/bin/rehearsal.js",
+    "agent:ignite": "pnpm run rehearsal --mode=world_synthesis && pnpm run audit",
+    "test:accelerated": "node src/bin/rehearsal.js --duration=30m --mode=epoch_generation"
   },
   "keywords": [
     "orchestrator",
@@ -15,6 +18,9 @@
   "author": "AdaptCo",
   "license": "ISC",
   "dependencies": {
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "commander": "11.1.0",
+    "crypto-js": "4.2.0",
+    "pino": "8.21.0"
   }
 }
