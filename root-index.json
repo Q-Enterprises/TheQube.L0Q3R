@@ -1,0 +1,21 @@
+{
+      "project": "TheQube.L0Q3R",
+      "version": "1.0.0-PROD-ALPHA",
+      "orchestration_root": {
+        "workflows": [
+          ".github/workflows/build-spine.yml",
+          ".github/workflows/manifold-validation.yml"
+        ],
+        "definitions": "validation-guide.json"
+      },
+      "construction_artifacts": {
+        "data_spine": "scripts/spine_generator.py",
+        "verification": "scripts/manifold/test_symmetry.py",
+        "anchoring": "core/merkle_forest.py"
+      },
+      "agent_guardrails": {
+        "context_isolation": "enabled",
+        "variable_abstraction": "strict",
+        "required_constants": ["C5_SYMMETRY", "GEOMETRY_SPOKE_COUNT"]
+      }
+    }
