@@ -16,7 +16,12 @@
 # For more information on GitHub Actions for Azure: https://github.com/Azure/Actions
 # For more information on the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # For more samples to get started with GitHub Action workflows to deploy to Azure: https://github.com/Azure/actions-workflow-samples
-
+name: Set up Node.js
+uses: actions/setup-node@v3
+with:
+  node-version: '18.x'
+    # Remove or comment out the 'cache' line if it is looking for a lock file
+    # cache: 'npm'
 on:
   push:
     branches: [ "main" ]
