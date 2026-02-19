@@ -1,0 +1,39 @@
+name: Manifold Production Validation
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'assets/**'
+      - 'scripts/manifold/**'
+
+jobs:
+  validate-manifold:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install pytest
+          npm install
+
+      - name: Parse Validation Guide & Execute Tests
+        run: |
+          # Read commands from validation-guide.json and execute
+          cat validation-guide.json | jq -r '.validation_steps[].command' | while read cmd; do
+            echo "Executing Validation: $cmd"
+            eval $cmd || exit 1
+          done
+
+      - name: Enforce Coverage
+        run: |
+          # Placeholder for coverage enforcement
+          MIN_COV=$(jq -r '.pr_requirements.min_coverage' validation-guide.json | sed 's/%//')
+          echo "Enforcing minimum coverage of $MIN_COV%"
