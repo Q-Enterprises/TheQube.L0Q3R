@@ -1,0 +1,39 @@
+{
+  "workflow": "build-spine.yml",
+  "component": "Token Manifold",
+  "validation_steps": [
+    {
+      "id": "UT-001",
+      "name": "Manifold Symmetry Check",
+      "description": "Verify that the token distribution adheres to the required C5_SYMMETRY constants.",
+      "command": "pytest tests/manifold/test_symmetry.py",
+      "required": true
+    },
+    {
+      "id": "UT-002",
+      "name": "Epoch Waypoint Integrity",
+      "description": "Ensures that the accelerated epoch generation does not produce orphaned waypoints.",
+      "command": "python scripts/validate_waypoints.py --mode production",
+      "required": true
+    },
+    {
+      "id": "UT-003",
+      "name": "Asset Constant Verification",
+      "description": "Confirms Obsidian/Nocturnal Black assets (VH100 & A90) are correctly mapped in the spinal column.",
+      "command": "npm run test:assets",
+      "required": true
+    }
+  ],
+  "pr_requirements": {
+    "min_coverage": "95%",
+    "block_on_failure": true,
+    "manual_review_required": [
+      "Geometry changes",
+      "Spoke variation overrides"
+    ]
+  },
+  "error_codes": {
+    "1": "General Script Failure: Check logs for waypoint mapping exceptions.",
+    "127": "Environment Error: Ensure all spinal dependencies are installed via build-spine.yml."
+  }
+}
