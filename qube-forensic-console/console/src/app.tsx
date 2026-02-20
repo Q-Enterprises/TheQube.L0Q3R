@@ -3,10 +3,12 @@ import { loadTelemetryNDJSON } from "./api";
 import { TelemetryEventV1 } from "./types";
 import EventList from "./views/EventList";
 import EventDetail from "./views/EventDetail";
+import ToyCreator from "./views/ToyCreator";
 
 export default function App() {
   const [events, setEvents] = useState<TelemetryEventV1[]>([]);
   const [selected, setSelected] = useState<TelemetryEventV1 | null>(null);
+  const [view, setView] = useState<"console" | "toy-creator">("toy-creator");
 
   useEffect(() => {
     loadTelemetryNDJSON("/ssot_telemetry_audit.ndjson").then((e) => {
@@ -25,9 +27,33 @@ export default function App() {
     return m;
   }, [events]);
 
+  if (view === "toy-creator") {
+    return (
+      <div className="flex justify-center min-h-screen bg-background-dark">
+        <ToyCreator onBack={() => setView("console")} />
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: "grid", gridTemplateColumns: "360px 1fr", height: "100vh" }}>
-      <div style={{ borderRight: "1px solid #ddd", overflow: "auto" }}>
+      <div style={{ borderRight: "1px solid #ddd", overflow: "auto", position: "relative" }}>
+        <button
+          onClick={() => setView("toy-creator")}
+          style={{
+            position: "sticky",
+            top: 0,
+            width: "100%",
+            padding: "8px",
+            backgroundColor: "#eee",
+            borderBottom: "1px solid #ddd",
+            marginBottom: "8px",
+            cursor: "pointer",
+            fontWeight: "bold"
+          }}
+        >
+          Open Toy Creator
+        </button>
         <EventList events={events} selected={selected} onSelect={setSelected} />
       </div>
       <div style={{ overflow: "auto" }}>
