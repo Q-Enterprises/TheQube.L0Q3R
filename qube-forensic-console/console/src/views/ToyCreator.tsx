@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { loadGeneratedToys, ToyPart } from "../api";
+import React, { useState } from "react";
 
 interface ToyCreatorProps {
   onBack?: () => void;
@@ -7,60 +6,6 @@ interface ToyCreatorProps {
 
 export default function ToyCreator({ onBack }: ToyCreatorProps) {
   const [activeTab, setActiveTab] = useState("Structure");
-  const [prompt, setPrompt] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [generatedParts, setGeneratedParts] = useState<ToyPart[]>([]);
-
-  // Default parts from the design
-  const defaultParts: ToyPart[] = [
-    { name: "Mecha Head", type: "Structure", level: 3, icon: "smart_toy", description: "Standard issue mecha head" },
-    { name: "Bug Legs", type: "Structure", level: 1, icon: "pest_control", description: "Agile insectoid legs" },
-    { name: "Jet Pack", type: "Structure", level: 5, icon: "rocket_launch", description: "High velocity thrusters" },
-    { name: "Deflector", type: "Structure", level: 2, icon: "shield", description: "Energy shield generator" },
-  ];
-
-  const fetchParts = async () => {
-    const parts = await loadGeneratedToys();
-    setGeneratedParts(parts);
-  };
-
-  useEffect(() => {
-    fetchParts();
-  }, []);
-
-  const handleGenerate = () => {
-    if (!prompt) return;
-
-    setIsGenerating(true);
-    setProgress(0);
-
-    // Simulate progress
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 95) {
-          clearInterval(interval);
-          return 95;
-        }
-        return prev + Math.random() * 10;
-      });
-    }, 200);
-
-    // Mock the "done" state after 3 seconds, assuming the user might have run the script or we just show a message
-    // In a real app with a backend, we would await the API call here.
-    // For this demo, we'll pretend we are waiting for the backend.
-    setTimeout(async () => {
-      clearInterval(interval);
-      setProgress(100);
-      await fetchParts(); // Refresh parts list in case the script was run externally or just to show flow
-      setIsGenerating(false);
-      // Reset progress after a moment
-      setTimeout(() => setProgress(0), 1000);
-      alert("Command sent! (In a real deployment, the backend would process: " + prompt + ")");
-    }, 3000);
-  };
-
-  const allParts = [...generatedParts, ...defaultParts];
 
   return (
     <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto shadow-2xl overflow-hidden bg-background-dark text-slate-900 dark:text-white font-display">
@@ -125,20 +70,18 @@ export default function ToyCreator({ onBack }: ToyCreatorProps) {
         </div>
 
         {/* Progress Indicator (Generation Status) */}
-        {(isGenerating || progress > 0) && (
-          <div className="glass-panel rounded-lg p-3 flex flex-col gap-2">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary animate-pulse" style={{ fontSize: "18px" }}>auto_awesome</span>
-                <p className="text-white text-xs font-medium uppercase tracking-wide">Processing LORA...</p>
-              </div>
-              <p className="text-primary text-xs font-bold">{Math.round(progress)}%</p>
+        <div className="glass-panel rounded-lg p-3 flex flex-col gap-2">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary animate-pulse" style={{ fontSize: "18px" }}>auto_awesome</span>
+              <p className="text-white text-xs font-medium uppercase tracking-wide">Processing LORA...</p>
             </div>
-            <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-              <div className="h-full bg-primary shadow-[0_0_10px_#1337ec] rounded-full" style={{ width: `${progress}%`, transition: "width 0.2s ease-out" }}></div>
-            </div>
+            <p className="text-primary text-xs font-bold">42%</p>
           </div>
-        )}
+          <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+            <div className="h-full bg-primary shadow-[0_0_10px_#1337ec] rounded-full" style={{ width: "42%" }}></div>
+          </div>
+        </div>
 
         {/* AI Composer / Command Terminal */}
         <div className="glass-panel rounded-xl p-1 relative overflow-hidden group focus-within:ring-1 focus-within:ring-primary/50 transition-all">
@@ -146,18 +89,8 @@ export default function ToyCreator({ onBack }: ToyCreatorProps) {
             <div className="pl-3 text-primary/70">
               <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>terminal</span>
             </div>
-            <input
-              className="w-full bg-transparent border-none text-white placeholder-white/30 text-sm py-3 px-1 focus:ring-0 font-mono focus:outline-none"
-              placeholder="Type command (e.g. 'Add dragon wings')..."
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
-            />
-            <button
-              onClick={handleGenerate}
-              disabled={isGenerating || !prompt}
-              className={`bg-primary hover:bg-primary-glow text-white rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-primary/20 mr-1 cursor-pointer ${isGenerating || !prompt ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
+            <input className="w-full bg-transparent border-none text-white placeholder-white/30 text-sm py-3 px-1 focus:ring-0 font-mono focus:outline-none" placeholder="Type command (e.g. 'Add dragon wings')..." />
+            <button className="bg-primary hover:bg-primary-glow text-white rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-primary/20 mr-1 cursor-pointer">
               Generate
             </button>
           </div>
@@ -191,26 +124,46 @@ export default function ToyCreator({ onBack }: ToyCreatorProps) {
           <div>
             <div className="flex justify-between items-center mb-3 px-1">
               <h3 className="text-xs text-white/60 font-bold uppercase tracking-widest">Available Parts</h3>
-              <div className="flex gap-2">
-                 <span className="text-[10px] text-white/50 cursor-pointer hover:text-white transition-colors" onClick={fetchParts}>Refresh</span>
-                 <span className="text-[10px] text-primary cursor-pointer hover:underline">View All</span>
-              </div>
+              <span className="text-[10px] text-primary cursor-pointer hover:underline">View All</span>
             </div>
             <div className="flex gap-3 overflow-x-auto pb-4 hide-scrollbar snap-x">
-              {allParts.map((part, index) => (
-                <div key={index} className={`snap-center min-w-[100px] rounded-xl p-2 flex flex-col items-center gap-2 relative transition-colors cursor-pointer ${index === 0 && generatedParts.length > 0 ? 'bg-surface-dark border border-primary/50 shadow-neon' : 'bg-white/5 border border-white/5 hover:bg-white/10'}`}>
-                  {index === 0 && generatedParts.length > 0 && <div className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full animate-pulse"></div>}
-                  <div
-                    className="w-16 h-16 rounded-lg bg-black/50 flex items-center justify-center border border-white/5 mt-1"
-                    data-alt={part.description}
-                    style={index === 0 && generatedParts.length > 0 ? { backgroundImage: "radial-gradient(circle at center, #1337ec20 0%, transparent 70%)" } : {}}
-                  >
-                    <span className="material-symbols-outlined text-white/60" style={{ fontSize: "32px" }}>{part.icon}</span>
-                  </div>
-                  <span className="text-[10px] text-white/70 font-medium text-center">{part.name}</span>
-                  <span className="text-[9px] text-white/30 font-mono">Lvl {part.level}</span>
+              {/* Card 1 (Active) */}
+              <div className="snap-center min-w-[100px] bg-surface-dark border border-primary/50 rounded-xl p-2 flex flex-col items-center gap-2 relative shadow-neon cursor-pointer">
+                <div className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                <div
+                  className="w-16 h-16 rounded-lg bg-black/50 flex items-center justify-center border border-white/5 mt-1"
+                  data-alt="Icon of a blocky robot head"
+                  style={{ backgroundImage: "radial-gradient(circle at center, #1337ec20 0%, transparent 70%)" }}
+                >
+                  <span className="material-symbols-outlined text-white" style={{ fontSize: "32px" }}>smart_toy</span>
                 </div>
-              ))}
+                <span className="text-[10px] text-white font-bold text-center">Mecha Head</span>
+                <span className="text-[9px] text-primary font-mono">Lvl 3</span>
+              </div>
+              {/* Card 2 */}
+              <div className="snap-center min-w-[100px] bg-white/5 border border-white/5 rounded-xl p-2 flex flex-col items-center gap-2 hover:bg-white/10 transition-colors cursor-pointer">
+                <div className="w-16 h-16 rounded-lg bg-black/50 flex items-center justify-center border border-white/5 mt-1">
+                  <span className="material-symbols-outlined text-white/60" style={{ fontSize: "32px" }}>pest_control</span>
+                </div>
+                <span className="text-[10px] text-white/70 font-medium text-center">Bug Legs</span>
+                <span className="text-[9px] text-white/30 font-mono">Lvl 1</span>
+              </div>
+              {/* Card 3 */}
+              <div className="snap-center min-w-[100px] bg-white/5 border border-white/5 rounded-xl p-2 flex flex-col items-center gap-2 hover:bg-white/10 transition-colors cursor-pointer">
+                <div className="w-16 h-16 rounded-lg bg-black/50 flex items-center justify-center border border-white/5 mt-1">
+                  <span className="material-symbols-outlined text-white/60" style={{ fontSize: "32px" }}>rocket_launch</span>
+                </div>
+                <span className="text-[10px] text-white/70 font-medium text-center">Jet Pack</span>
+                <span className="text-[9px] text-white/30 font-mono">Lvl 5</span>
+              </div>
+              {/* Card 4 */}
+              <div className="snap-center min-w-[100px] bg-white/5 border border-white/5 rounded-xl p-2 flex flex-col items-center gap-2 hover:bg-white/10 transition-colors cursor-pointer">
+                <div className="w-16 h-16 rounded-lg bg-black/50 flex items-center justify-center border border-white/5 mt-1">
+                  <span className="material-symbols-outlined text-white/60" style={{ fontSize: "32px" }}>shield</span>
+                </div>
+                <span className="text-[10px] text-white/70 font-medium text-center">Deflector</span>
+                <span className="text-[9px] text-white/30 font-mono">Lvl 2</span>
+              </div>
             </div>
           </div>
         </div>
