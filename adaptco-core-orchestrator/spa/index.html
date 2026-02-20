@@ -228,6 +228,70 @@
             </div>
         </section>
 
+        <!-- Jurassic Pixels Game Engine & Vehicle Simulator -->
+        <section class="space-y-6">
+            <div>
+                <h3 class="text-sm font-black uppercase tracking-[0.2em] text-stone-400">Jurassic Pixels Runtime Lab</h3>
+                <p class="text-sm text-stone-600 max-w-3xl">
+                    Physics-driven canvas prototypes powered by a shared variable array. Switch checkpoints to preview 8-bit, 16-bit, and 32-bit simulation modes orchestrated under a 64-bit voxelized world model.
+                </p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-3xl tactical-border shadow-sm space-y-4">
+                    <div class="flex flex-col gap-3">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xs font-black uppercase tracking-widest text-stone-400">Jurassic Pixels Game Engine</h4>
+                            <select id="jp-level" class="text-[10px] font-bold uppercase border border-stone-200 rounded px-3 py-1">
+                                <option value="8bit">8-bit Bubble Bobble</option>
+                                <option value="16bit">16-bit RPG</option>
+                                <option value="32bit">32-bit SONIC</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-2 text-[10px] font-bold uppercase text-stone-500">
+                            <span class="px-2 py-1 rounded bg-emerald-50 text-emerald-700">64-bit Voxel World</span>
+                            <span class="px-2 py-1 rounded bg-amber-50 text-amber-700">Agent Nodes Online</span>
+                        </div>
+                    </div>
+                    <canvas id="jurassic-canvas" class="w-full h-[320px] rounded-xl border border-stone-100 bg-stone-950"></canvas>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-[10px] mono text-stone-500">
+                        <div class="space-y-1">
+                            <p class="font-bold uppercase text-stone-400">Checkpoint Payload</p>
+                            <pre id="jp-checkpoint" class="bg-stone-100 rounded p-3 whitespace-pre-wrap text-[9px]"></pre>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="font-bold uppercase text-stone-400">Semantic Momentum</p>
+                            <div id="jp-telemetry" class="bg-stone-100 rounded p-3 space-y-1 text-[9px]"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl tactical-border shadow-sm space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-black uppercase tracking-widest text-stone-400">ACC-Style Vehicle Simulator</h4>
+                        <button id="vehicle-reset" class="text-[10px] font-bold uppercase border border-stone-200 rounded px-3 py-1 hover:bg-stone-50">Reset</button>
+                    </div>
+                    <p class="text-xs text-stone-600">
+                        Unity-inspired dynamics model running on the same physics kernel. Agents act as articulation nodes for steering, throttle, and braking control within a closed track.
+                    </p>
+                    <canvas id="vehicle-canvas" class="w-full h-[320px] rounded-xl border border-stone-100 bg-stone-900"></canvas>
+                    <div class="grid grid-cols-3 gap-3 text-[10px] mono text-stone-500">
+                        <div class="bg-stone-100 rounded p-3">
+                            <p class="uppercase font-bold text-stone-400">Speed</p>
+                            <p id="vehicle-speed" class="text-sm text-stone-900">0.0 m/s</p>
+                        </div>
+                        <div class="bg-stone-100 rounded p-3">
+                            <p class="uppercase font-bold text-stone-400">Slip</p>
+                            <p id="vehicle-slip" class="text-sm text-stone-900">0.00 rad</p>
+                        </div>
+                        <div class="bg-stone-100 rounded p-3">
+                            <p class="uppercase font-bold text-stone-400">Lap</p>
+                            <p id="vehicle-lap" class="text-sm text-stone-900">0.00 km</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- AI Response Modal -->
@@ -431,7 +495,249 @@
         }
         function logToTerminal(msg, colorClass = "stone-400") { const feed = document.getElementById('terminal-feed'); const p = document.createElement('p'); p.className = colorClass === "emerald" ? "text-emerald-500" : "text-stone-400"; p.innerText = msg; feed.appendChild(p); feed.scrollTop = feed.scrollHeight; }
 
-        window.onload = () => { initLidar(); initCharts(); };
+        // --- Jurassic Pixels Game Engine ---
+        const jurassicVars = [
+            { name: "gravity", value: 0.18 },
+            { name: "friction", value: 0.92 },
+            { name: "bounce", value: 0.72 },
+            { name: "spawnEnergy", value: 3.4 },
+            { name: "semanticMomentum", value: 0.86 },
+            { name: "voxelScale", value: 64 }
+        ];
+
+        const jurassicCheckpoint = {
+            title: "Jurassic Pixels Checkpoint",
+            build: "JPX-LLM-0.9.4",
+            modes: {
+                "8bit": { style: "Bubble Bobble", palette: ["#62F3FF", "#8CFF6A", "#FFE66D"], speed: 1.1 },
+                "16bit": { style: "RPG", palette: ["#F97316", "#38BDF8", "#FDE047"], speed: 1.35 },
+                "32bit": { style: "SONIC", palette: ["#38BDF8", "#22C55E", "#A855F7"], speed: 1.6 }
+            },
+            orchestrator: "64-bit Voxelized Mario Block World",
+            agents: ["Queen Boo", "Agent Coffee", "CiCi"],
+            physicsKernel: "Jurassic Pixels Physics"
+        };
+
+        const jurassicState = {
+            level: "8bit",
+            actor: { x: 40, y: 40, vx: 0, vy: 0, r: 8 },
+            orbs: [],
+            time: 0,
+            bounds: { w: 480, h: 320 }
+        };
+
+        function initJurassicEngine() {
+            const canvas = document.getElementById('jurassic-canvas');
+            const ctx = canvas.getContext('2d');
+            const resize = () => {
+                canvas.width = canvas.clientWidth * window.devicePixelRatio;
+                canvas.height = canvas.clientHeight * window.devicePixelRatio;
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+                jurassicState.bounds.w = canvas.clientWidth;
+                jurassicState.bounds.h = canvas.clientHeight;
+            };
+            resize();
+            window.addEventListener('resize', resize);
+
+            jurassicState.orbs = Array.from({ length: 12 }, (_, i) => ({
+                x: 40 + i * 30,
+                y: 80 + (i % 3) * 40,
+                vx: (Math.random() - 0.5) * 0.6,
+                vy: (Math.random() - 0.5) * 0.6,
+                r: 5 + (i % 3)
+            }));
+
+            document.getElementById('jp-level').addEventListener('change', (event) => {
+                jurassicState.level = event.target.value;
+                logToTerminal(`[JPX] Level switched to ${jurassicCheckpoint.modes[jurassicState.level].style}.`, "emerald");
+            });
+
+            updateJurassicCheckpoint();
+
+            const loop = () => {
+                stepJurassic();
+                drawJurassic(ctx);
+                requestAnimationFrame(loop);
+            };
+            loop();
+        }
+
+        function updateJurassicCheckpoint() {
+            const checkpointEl = document.getElementById('jp-checkpoint');
+            checkpointEl.textContent = JSON.stringify(jurassicCheckpoint, null, 2);
+        }
+
+        function stepJurassic() {
+            const gravity = jurassicVars.find(v => v.name === "gravity").value;
+            const friction = jurassicVars.find(v => v.name === "friction").value;
+            const bounce = jurassicVars.find(v => v.name === "bounce").value;
+            const speed = jurassicCheckpoint.modes[jurassicState.level].speed;
+
+            jurassicState.time += 0.016 * speed;
+            jurassicState.actor.vy += gravity;
+            jurassicState.actor.x += jurassicState.actor.vx;
+            jurassicState.actor.y += jurassicState.actor.vy;
+
+            if (jurassicState.actor.y > jurassicState.bounds.h - jurassicState.actor.r) {
+                jurassicState.actor.y = jurassicState.bounds.h - jurassicState.actor.r;
+                jurassicState.actor.vy *= -bounce;
+            }
+            if (jurassicState.actor.x > jurassicState.bounds.w - jurassicState.actor.r || jurassicState.actor.x < jurassicState.actor.r) {
+                jurassicState.actor.vx *= -bounce;
+            }
+            jurassicState.actor.vx *= friction;
+            jurassicState.actor.vy *= friction;
+
+            jurassicState.orbs.forEach((orb) => {
+                orb.x += orb.vx * speed;
+                orb.y += orb.vy * speed;
+                if (orb.x < orb.r || orb.x > jurassicState.bounds.w - orb.r) orb.vx *= -1;
+                if (orb.y < orb.r || orb.y > jurassicState.bounds.h - orb.r) orb.vy *= -1;
+            });
+
+            const telemetry = document.getElementById('jp-telemetry');
+            telemetry.innerHTML = `
+                <p>Δt: ${jurassicState.time.toFixed(2)}</p>
+                <p>Actor Energy: ${(Math.abs(jurassicState.actor.vx) + Math.abs(jurassicState.actor.vy)).toFixed(2)}</p>
+                <p>Semantic Momentum: ${jurassicVars.find(v => v.name === "semanticMomentum").value}</p>
+                <p>Voxel Scale: ${jurassicVars.find(v => v.name === "voxelScale").value}-bit</p>
+            `;
+        }
+
+        function drawJurassic(ctx) {
+            const palette = jurassicCheckpoint.modes[jurassicState.level].palette;
+            ctx.clearRect(0, 0, jurassicState.bounds.w, jurassicState.bounds.h);
+            ctx.fillStyle = "#0F172A";
+            ctx.fillRect(0, 0, jurassicState.bounds.w, jurassicState.bounds.h);
+            ctx.fillStyle = palette[0];
+            ctx.beginPath();
+            ctx.arc(jurassicState.actor.x, jurassicState.actor.y, jurassicState.actor.r, 0, Math.PI * 2);
+            ctx.fill();
+
+            jurassicState.orbs.forEach((orb, index) => {
+                ctx.fillStyle = palette[index % palette.length];
+                ctx.beginPath();
+                ctx.arc(orb.x, orb.y, orb.r, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.fillStyle = "rgba(255,255,255,0.4)";
+            ctx.font = "10px JetBrains Mono";
+            ctx.fillText(`MODE: ${jurassicCheckpoint.modes[jurassicState.level].style}`, 12, 16);
+        }
+
+        // --- Vehicle Simulator ---
+        const vehicleState = {
+            x: 240,
+            y: 160,
+            heading: 0,
+            speed: 0,
+            lapDistance: 0,
+            wheelBase: 2.6,
+            steering: 0,
+            throttle: 0,
+            brake: 0
+        };
+
+        function initVehicleSimulator() {
+            const canvas = document.getElementById('vehicle-canvas');
+            const ctx = canvas.getContext('2d');
+            const resize = () => {
+                canvas.width = canvas.clientWidth * window.devicePixelRatio;
+                canvas.height = canvas.clientHeight * window.devicePixelRatio;
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            };
+            resize();
+            window.addEventListener('resize', resize);
+
+            document.getElementById('vehicle-reset').addEventListener('click', () => {
+                vehicleState.x = canvas.clientWidth * 0.3;
+                vehicleState.y = canvas.clientHeight * 0.6;
+                vehicleState.heading = 0;
+                vehicleState.speed = 0;
+                vehicleState.lapDistance = 0;
+            });
+
+            const controls = { up: false, down: false, left: false, right: false };
+            window.addEventListener('keydown', (event) => {
+                if (event.key === "ArrowUp") controls.up = true;
+                if (event.key === "ArrowDown") controls.down = true;
+                if (event.key === "ArrowLeft") controls.left = true;
+                if (event.key === "ArrowRight") controls.right = true;
+            });
+            window.addEventListener('keyup', (event) => {
+                if (event.key === "ArrowUp") controls.up = false;
+                if (event.key === "ArrowDown") controls.down = false;
+                if (event.key === "ArrowLeft") controls.left = false;
+                if (event.key === "ArrowRight") controls.right = false;
+            });
+
+            const loop = () => {
+                stepVehicle(controls, canvas.clientWidth, canvas.clientHeight);
+                drawVehicle(ctx, canvas.clientWidth, canvas.clientHeight);
+                requestAnimationFrame(loop);
+            };
+            loop();
+        }
+
+        function stepVehicle(controls, width, height) {
+            vehicleState.throttle = controls.up ? 1 : 0;
+            vehicleState.brake = controls.down ? 1 : 0;
+            vehicleState.steering = (controls.left ? -1 : 0) + (controls.right ? 1 : 0);
+
+            const accel = 0.08 * vehicleState.throttle - 0.12 * vehicleState.brake;
+            vehicleState.speed += accel;
+            vehicleState.speed *= 0.98;
+
+            const slipAngle = vehicleState.steering * Math.min(0.6, Math.abs(vehicleState.speed));
+            vehicleState.heading += slipAngle;
+
+            vehicleState.x += Math.cos(vehicleState.heading) * vehicleState.speed * 3.2;
+            vehicleState.y += Math.sin(vehicleState.heading) * vehicleState.speed * 3.2;
+
+            if (vehicleState.x < 40) vehicleState.x = 40;
+            if (vehicleState.y < 40) vehicleState.y = 40;
+            if (vehicleState.x > width - 40) vehicleState.x = width - 40;
+            if (vehicleState.y > height - 40) vehicleState.y = height - 40;
+
+            vehicleState.lapDistance += Math.abs(vehicleState.speed) * 0.05;
+
+            document.getElementById('vehicle-speed').innerText = `${vehicleState.speed.toFixed(2)} m/s`;
+            document.getElementById('vehicle-slip').innerText = `${slipAngle.toFixed(2)} rad`;
+            document.getElementById('vehicle-lap').innerText = `${vehicleState.lapDistance.toFixed(2)} km`;
+        }
+
+        function drawVehicle(ctx, width, height) {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = "#0F172A";
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.strokeStyle = "#F97316";
+            ctx.lineWidth = 3;
+            ctx.strokeRect(35, 35, width - 70, height - 70);
+
+            ctx.strokeStyle = "#38BDF8";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(80, 80, width - 160, height - 160);
+
+            ctx.save();
+            ctx.translate(vehicleState.x, vehicleState.y);
+            ctx.rotate(vehicleState.heading);
+            ctx.fillStyle = "#FDE047";
+            ctx.fillRect(-10, -6, 20, 12);
+            ctx.fillStyle = "#1C1917";
+            ctx.fillRect(4, -4, 6, 8);
+            ctx.restore();
+        }
+
+        window.onload = () => {
+            initLidar();
+            initCharts();
+            initJurassicEngine();
+            initVehicleSimulator();
+        };
     </script>
 </body>
 </html>
