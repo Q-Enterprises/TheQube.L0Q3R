@@ -8,7 +8,6 @@ name: Django CI
     
     jobs:
       build:
-    
         runs-on: ubuntu-latest
         strategy:
           max-parallel: 4
