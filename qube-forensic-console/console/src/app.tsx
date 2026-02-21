@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Routes, Route, useNavigate, Navigate, useLocation } from "react-router-dom";
 import { loadTelemetryNDJSON } from "./api";
 import { TelemetryEventV1 } from "./types";
 import EventList from "./views/EventList";
 import EventDetail from "./views/EventDetail";
 import ToyCreator from "./views/ToyCreator";
 
-export default function App() {
+function Dashboard() {
   const [events, setEvents] = useState<TelemetryEventV1[]>([]);
   const [selected, setSelected] = useState<TelemetryEventV1 | null>(null);
   const [view, setView] = useState<"console" | "toy-creator">("toy-creator");
@@ -62,5 +63,32 @@ export default function App() {
         <div style={{ display: "none" }}>{byCase.size}</div>
       </div>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/auth" element={<Auth />} />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/toy-creator"
+        element={
+          <ProtectedRoute>
+            <div className="h-screen bg-background-dark flex items-center justify-center">
+              <ToyCreator onBack={() => window.history.back()} />
+            </div>
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
