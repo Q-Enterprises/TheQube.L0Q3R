@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1337ec;
+  --color-primary-glow: #4c6ef5;
+  --color-accent-lego-red: #ff3b30;
+  --color-accent-lego-yellow: #ffcc00;
+  --color-background-light: #f6f6f8;
+  --color-background-dark: #0a0a0a;
+  --color-surface-dark: #15161e;
+  --color-surface-glass: rgba(28, 29, 39, 0.7);
+
+  --font-display: "Space Grotesk", sans-serif;
+
+  --shadow-neon: 0 0 10px rgba(19, 55, 236, 0.5), 0 0 20px rgba(19, 55, 236, 0.3);
+  --shadow-hologram: inset 0 0 20px rgba(19, 55, 236, 0.2);
+
+  --image-grid-pattern: linear-gradient(to right, #1f2937 1px, transparent 1px), linear-gradient(to bottom, #1f2937 1px, transparent 1px);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.glass-panel {
+    background: rgba(21, 22, 30, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hologram-grid {
+    background-size: 40px 40px;
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
+}
