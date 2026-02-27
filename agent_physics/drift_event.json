@@ -1,9 +1,1 @@
-{
-  "event_version": "1.0",
-  "source": "test",
-  "variables": {
-    "curvature": 0.07,
-    "entropy": 0.12,
-    "invariant_mass": 1.0
-  }
-}
+{"event_version":"1.0","source":"test","variables":{"curvature":0.07,"entropy":0.12,"invariant_mass":1.0}}
