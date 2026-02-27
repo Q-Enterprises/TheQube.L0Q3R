@@ -64,6 +64,7 @@ class RLTrainingConfig:
     hidden_units: int = 256
     num_layers: int = 2
     offline_dataset_path: Optional[str] = None
+    initialize_from_run_id: Optional[str] = None
     run_id_prefix: str = "unity-mlops"
 
 
@@ -125,6 +126,7 @@ class UnityMLOpsOrchestrator:
         self.unity_executable = unity_executable or os.getenv("UNITY_EXECUTABLE")
         self.unity_project_path = unity_project_path or os.getenv("UNITY_PROJECT_PATH")
         self.webhook_url = webhook_url or os.getenv("TRAINING_WEBHOOK_URL")
+        self.vertex_serving_container_image_uri = os.getenv("VERTEX_SERVING_CONTAINER_IMAGE_URI")
 
     async def execute_training_job(self, job: TrainingJob) -> TrainingResult:
         """Runs the complete training flow for one job."""
@@ -186,26 +188,8 @@ class UnityMLOpsOrchestrator:
         build_dir.mkdir(parents=True, exist_ok=True)
 
         if self.unity_executable and self.unity_project_path:
-            unity_project = pathlib.Path(self.unity_project_path)
-            generated_assets_dir = unity_project / "Assets" / "GeneratedMLOps" / job.asset_spec.asset_id
-            generated_assets_dir.mkdir(parents=True, exist_ok=True)
-
-            unity_script_path = generated_assets_dir / generated_script_path.name
-            if unity_script_path.exists():
-                unity_script_path.unlink()
-            shutil.copy2(generated_script_path, unity_script_path)
-
-            self._ensure_unity_refresh_build_method(unity_project)
-
-            job.metadata["generated_script_source_path"] = str(generated_script_path.resolve())
-            job.metadata["generated_script_destination_path"] = str(unity_script_path.resolve())
-            LOGGER.info(
-                "Job %s copied generated script from %s to %s",
-                job.job_id,
-                generated_script_path,
-                unity_script_path,
-            )
-
+            script_destination = self._copy_generated_script_into_unity_project(job, generated_script_path)
+            LOGGER.info("Generated script copied to Unity project: %s", script_destination)
             cmd = [
                 self.unity_executable,
                 "-quit",
@@ -213,7 +197,9 @@ class UnityMLOpsOrchestrator:
                 "-projectPath",
                 self.unity_project_path,
                 "-executeMethod",
-                "MLOpsBuildPipelineBootstrap.BuildTrainingEnvironmentWithRefresh",
+                "MLOpsBuildPipeline.BuildTrainingEnvironment",
+                "-generatedScriptPath",
+                str(script_destination),
                 "-logFile",
                 str(build_dir / "unity-build.log"),
             ]
@@ -270,8 +256,8 @@ class UnityMLOpsOrchestrator:
             f"--env={unity_build_path}",
         ]
 
-        if job.rl_config.offline_dataset_path:
-            command.append(f"--initialize-from={job.rl_config.offline_dataset_path}")
+        if job.rl_config.initialize_from_run_id:
+            command.append(f"--initialize-from={job.rl_config.initialize_from_run_id}")
 
         try:
             await self._run_command(command, cwd=str(output_root))
@@ -310,9 +296,22 @@ class UnityMLOpsOrchestrator:
 
         project = os.getenv("VERTEX_PROJECT")
         region = os.getenv("VERTEX_REGION", "us-central1")
+        serving_container_image_uri = os.getenv(
+            "VERTEX_SERVING_CONTAINER_IMAGE_URI",
+            "us-docker.pkg.dev/vertex-ai/prediction/onnxruntime-cpu.1-15:latest",
+        )
+        serving_container_predict_route = os.getenv("VERTEX_SERVING_CONTAINER_PREDICT_ROUTE", "/predict")
+        serving_container_health_route = os.getenv("VERTEX_SERVING_CONTAINER_HEALTH_ROUTE", "/health")
         display_name = f"{job.asset_spec.name}-{job.job_id}"
         if not project:
             raise ValueError("VERTEX_PROJECT must be set when VERTEX_ENABLE=true")
+
+        serving_container_image_uri = self.vertex_serving_container_image_uri
+        if not serving_container_image_uri:
+            raise ValueError(
+                "VERTEX_SERVING_CONTAINER_IMAGE_URI must be set when VERTEX_ENABLE=true "
+                "for ONNX artifacts"
+            )
 
         try:
             from google.cloud import aiplatform  # type: ignore
@@ -324,7 +323,7 @@ class UnityMLOpsOrchestrator:
             model = aiplatform.Model.upload(
                 display_name=display_name,
                 artifact_uri=str(pathlib.Path(model_path).parent),
-                serving_container_image_uri="us-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.1-2:latest",
+                serving_container_image_uri=serving_container_image_uri,
             )
             return model.resource_name
 
@@ -364,7 +363,48 @@ class UnityMLOpsOrchestrator:
     def _build_trainer_yaml(self, job: TrainingJob) -> str:
         behavior_name = job.asset_spec.name
         cfg = job.rl_config
-        return textwrap.dedent(
+        behavior_block = {
+            "trainer_type": cfg.algorithm.lower(),
+            "max_steps": cfg.max_steps,
+            "hyperparameters": {
+                "batch_size": cfg.batch_size,
+                "buffer_size": cfg.buffer_size,
+                "learning_rate": cfg.learning_rate,
+            },
+            "network_settings": {
+                "hidden_units": cfg.hidden_units,
+                "num_layers": cfg.num_layers,
+            },
+        }
+
+        if cfg.offline_dataset_path:
+            behavior_block["behavioral_cloning"] = {
+                "demo_path": cfg.offline_dataset_path,
+                "strength": 1.0,
+                "steps": max(1_000, min(100_000, cfg.max_steps // 10)),
+            }
+
+        yaml_dict = {"behaviors": {behavior_name: behavior_block}}
+
+        try:
+            import yaml  # type: ignore
+
+            return yaml.safe_dump(yaml_dict, sort_keys=False)
+        except Exception:
+            LOGGER.warning("pyyaml unavailable; falling back to hand-crafted trainer yaml")
+            bc_block = ""
+            if cfg.offline_dataset_path:
+                bc_steps = max(1_000, min(100_000, cfg.max_steps // 10))
+                bc_block = textwrap.dedent(
+                    f"""
+                    behavioral_cloning:
+                      demo_path: {cfg.offline_dataset_path}
+                      strength: 1.0
+                      steps: {bc_steps}
+                    """
+                )
+
+            return textwrap.dedent(
             f"""
             behaviors:
               {behavior_name}:
@@ -377,8 +417,23 @@ class UnityMLOpsOrchestrator:
                 network_settings:
                   hidden_units: {cfg.hidden_units}
                   num_layers: {cfg.num_layers}
+{textwrap.indent(bc_block.rstrip(), ' ' * 16) if bc_block else ''}
             """
         ).strip() + "\n"
+
+    def _copy_generated_script_into_unity_project(
+        self,
+        job: TrainingJob,
+        generated_script_path: pathlib.Path,
+    ) -> pathlib.Path:
+        if not self.unity_project_path:
+            raise ValueError("UNITY_PROJECT_PATH must be set before copying generated script")
+
+        unity_assets_root = pathlib.Path(self.unity_project_path) / "Assets" / "GeneratedMLOps" / job.asset_spec.asset_id
+        unity_assets_root.mkdir(parents=True, exist_ok=True)
+        destination = unity_assets_root / generated_script_path.name
+        shutil.copy2(generated_script_path, destination)
+        return destination
 
     def _fallback_script_template(self, asset_spec: UnityAssetSpec) -> str:
         return textwrap.dedent(
