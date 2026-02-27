@@ -21,6 +21,9 @@ Install dependencies:
 
 ```bash
 pip install mlagents==1.0.0 pyyaml croniter
+
+# Verify ML-Agents CLI compatibility
+mlagents-learn --help
 ```
 
 > `pyyaml` is used to emit structured trainer configuration (including behavioral cloning blocks for demonstration data).
