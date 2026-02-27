@@ -213,6 +213,30 @@ class UnityMLOpsOrchestrator:
 
         return build_dir
 
+    def _ensure_unity_refresh_build_method(self, unity_project: pathlib.Path) -> None:
+        editor_dir = unity_project / "Assets" / "Editor"
+        editor_dir.mkdir(parents=True, exist_ok=True)
+        bootstrap_path = editor_dir / "MLOpsBuildPipelineBootstrap.cs"
+        bootstrap_path.write_text(
+            textwrap.dedent(
+                """
+                using UnityEditor;
+
+                public static class MLOpsBuildPipelineBootstrap
+                {
+                    public static void BuildTrainingEnvironmentWithRefresh()
+                    {
+                        AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+                        AssetDatabase.SaveAssets();
+                        MLOpsBuildPipeline.BuildTrainingEnvironment();
+                    }
+                }
+                """
+            ).strip()
+            + "\n",
+            encoding="utf-8",
+        )
+
     async def train_agent(self, job: TrainingJob, unity_build_path: pathlib.Path) -> Dict[str, Any]:
         """Runs ML-Agents training and returns artifacts/metrics metadata."""
         run_id = f"{job.rl_config.run_id_prefix}-{job.job_id}-{uuid.uuid4().hex[:8]}"
