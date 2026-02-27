@@ -64,6 +64,7 @@ class RLTrainingConfig:
     hidden_units: int = 256
     num_layers: int = 2
     offline_dataset_path: Optional[str] = None
+    checkpoint_run_id: Optional[str] = None
     run_id_prefix: str = "unity-mlops"
 
 
@@ -226,8 +227,8 @@ class UnityMLOpsOrchestrator:
             f"--env={unity_build_path}",
         ]
 
-        if job.rl_config.offline_dataset_path:
-            command.append(f"--initialize-from={job.rl_config.offline_dataset_path}")
+        if job.rl_config.checkpoint_run_id:
+            command.append(f"--initialize-from={job.rl_config.checkpoint_run_id}")
 
         try:
             await self._run_command(command, cwd=str(output_root))
@@ -320,21 +321,31 @@ class UnityMLOpsOrchestrator:
     def _build_trainer_yaml(self, job: TrainingJob) -> str:
         behavior_name = job.asset_spec.name
         cfg = job.rl_config
-        return textwrap.dedent(
-            f"""
-            behaviors:
-              {behavior_name}:
-                trainer_type: {cfg.algorithm.lower()}
-                max_steps: {cfg.max_steps}
-                hyperparameters:
-                  batch_size: {cfg.batch_size}
-                  buffer_size: {cfg.buffer_size}
-                  learning_rate: {cfg.learning_rate}
-                network_settings:
-                  hidden_units: {cfg.hidden_units}
-                  num_layers: {cfg.num_layers}
-            """
-        ).strip() + "\n"
+        lines = [
+            "behaviors:",
+            f"  {behavior_name}:",
+            f"    trainer_type: {cfg.algorithm.lower()}",
+            f"    max_steps: {cfg.max_steps}",
+            "    hyperparameters:",
+            f"      batch_size: {cfg.batch_size}",
+            f"      buffer_size: {cfg.buffer_size}",
+            f"      learning_rate: {cfg.learning_rate}",
+            "    network_settings:",
+            f"      hidden_units: {cfg.hidden_units}",
+            f"      num_layers: {cfg.num_layers}",
+        ]
+
+        if cfg.offline_dataset_path:
+            lines.extend(
+                [
+                    "    behavioral_cloning:",
+                    f"      demo_path: {cfg.offline_dataset_path}",
+                    "      strength: 1.0",
+                    f"      steps: {cfg.max_steps}",
+                ]
+            )
+
+        return "\n".join(lines) + "\n"
 
     def _fallback_script_template(self, asset_spec: UnityAssetSpec) -> str:
         return textwrap.dedent(

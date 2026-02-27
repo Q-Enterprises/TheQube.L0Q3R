@@ -21,7 +21,17 @@ Install dependencies:
 
 ```bash
 pip install mlagents==1.0.0 pyyaml croniter
+
+# Verify ML-Agents CLI compatibility
+mlagents-learn --help
 ```
+
+
+Version/CLI notes:
+
+- `offline_dataset_path` is **not** passed to `--initialize-from`; it is wired into trainer YAML as behavior-level imitation/offline bootstrap config (`behavioral_cloning.demo_path`).
+- `--initialize-from` is reserved for `checkpoint_run_id` (previous training run/checkpoint warm-start semantics).
+- Keep your ML-Agents Python package and Unity ML-Agents package aligned to avoid CLI/config drift.
 
 Optional for Vertex AI registration:
 
@@ -143,9 +153,22 @@ Suggested process:
 
 1. Collect demonstration trajectories in your Unity environment.
 2. Export demonstrations to your dataset storage.
-3. Set `offline_dataset_path` in `RLTrainingConfig`.
-4. Run scheduled jobs to retrain from datasets regularly.
-5. Optionally fine-tune online in simulation.
+3. Set `offline_dataset_path` in `RLTrainingConfig` to write a behavior-level `behavioral_cloning.demo_path` entry in trainer YAML.
+4. (Optional) Set `checkpoint_run_id` in `RLTrainingConfig` only when warm-starting from a prior ML-Agents run-id/checkpoint (`--initialize-from`).
+5. Run scheduled jobs to retrain from datasets regularly.
+6. Optionally fine-tune online in simulation.
+
+
+Example config:
+
+```python
+config = RLTrainingConfig(
+    algorithm="PPO",
+    max_steps=500_000,
+    offline_dataset_path="/data/demos/navigation.demo",
+    checkpoint_run_id=None,  # set to prior run-id string only for checkpoint warm-start
+)
+```
 
 ## Production deployment notes
 
