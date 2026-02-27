@@ -186,6 +186,26 @@ class UnityMLOpsOrchestrator:
         build_dir.mkdir(parents=True, exist_ok=True)
 
         if self.unity_executable and self.unity_project_path:
+            unity_project = pathlib.Path(self.unity_project_path)
+            generated_assets_dir = unity_project / "Assets" / "GeneratedMLOps" / job.asset_spec.asset_id
+            generated_assets_dir.mkdir(parents=True, exist_ok=True)
+
+            unity_script_path = generated_assets_dir / generated_script_path.name
+            if unity_script_path.exists():
+                unity_script_path.unlink()
+            shutil.copy2(generated_script_path, unity_script_path)
+
+            self._ensure_unity_refresh_build_method(unity_project)
+
+            job.metadata["generated_script_source_path"] = str(generated_script_path.resolve())
+            job.metadata["generated_script_destination_path"] = str(unity_script_path.resolve())
+            LOGGER.info(
+                "Job %s copied generated script from %s to %s",
+                job.job_id,
+                generated_script_path,
+                unity_script_path,
+            )
+
             cmd = [
                 self.unity_executable,
                 "-quit",
@@ -193,7 +213,7 @@ class UnityMLOpsOrchestrator:
                 "-projectPath",
                 self.unity_project_path,
                 "-executeMethod",
-                "MLOpsBuildPipeline.BuildTrainingEnvironment",
+                "MLOpsBuildPipelineBootstrap.BuildTrainingEnvironmentWithRefresh",
                 "-logFile",
                 str(build_dir / "unity-build.log"),
             ]
@@ -206,6 +226,30 @@ class UnityMLOpsOrchestrator:
             shutil.copy2(generated_script_path, build_dir / generated_script_path.name)
 
         return build_dir
+
+    def _ensure_unity_refresh_build_method(self, unity_project: pathlib.Path) -> None:
+        editor_dir = unity_project / "Assets" / "Editor"
+        editor_dir.mkdir(parents=True, exist_ok=True)
+        bootstrap_path = editor_dir / "MLOpsBuildPipelineBootstrap.cs"
+        bootstrap_path.write_text(
+            textwrap.dedent(
+                """
+                using UnityEditor;
+
+                public static class MLOpsBuildPipelineBootstrap
+                {
+                    public static void BuildTrainingEnvironmentWithRefresh()
+                    {
+                        AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+                        AssetDatabase.SaveAssets();
+                        MLOpsBuildPipeline.BuildTrainingEnvironment();
+                    }
+                }
+                """
+            ).strip()
+            + "\n",
+            encoding="utf-8",
+        )
 
     async def train_agent(self, job: TrainingJob, unity_build_path: pathlib.Path) -> Dict[str, Any]:
         """Runs ML-Agents training and returns artifacts/metrics metadata."""
