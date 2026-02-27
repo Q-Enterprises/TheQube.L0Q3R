@@ -1,0 +1,8 @@
+{
+  "state_version": "1.0",
+  "variables": {
+    "curvature": 0.0,
+    "entropy": 0.10,
+    "invariant_mass": 1.0
+  }
+}

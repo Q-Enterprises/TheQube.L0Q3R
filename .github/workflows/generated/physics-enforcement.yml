@@ -1,0 +1,27 @@
+name: physics-enforcement
+
+on:
+  pull_request:
+    types: ['opened', 'synchronize', 'reopened']
+
+permissions:
+  contents: read
+
+jobs:
+  enforce:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Physics enforcement (bounds + drift thresholds vs baseline)
+        run: |
+          python scripts/physics_semantic_diff.py \
+            --current agent_physics/current_state.json \
+            --model agent_physics/physics_model.json \
+            --check-only

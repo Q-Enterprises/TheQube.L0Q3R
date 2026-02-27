@@ -1,0 +1,49 @@
+name: physics-drift-detector
+
+on:
+  push:
+    paths:
+      - agent_physics/drift_event.json
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  detect-and-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Semantic diff + update physics model/state
+        run: |
+          python scripts/physics_semantic_diff.py \
+            --current agent_physics/current_state.json \
+            --drift agent_physics/drift_event.json \
+            --model agent_physics/physics_model.json \
+            --write-updates \
+            --emit-pr-body .physics_pr_body.md
+
+      - name: Create Pull Request (physics-drift-update)
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: physics-drift-update
+          delete-branch: true
+          commit-message: "physics: drift update (semantic diff + model sync)"
+          title: "physics: drift update"
+          body-path: .physics_pr_body.md
+          labels: |
+            physics-enforcement
+          add-paths: |
+            agent_physics/physics_model.json
+            agent_physics/current_state.json
+            agent_physics/drift_event.json
