@@ -272,6 +272,12 @@ class UnityMLOpsOrchestrator:
 
         project = os.getenv("VERTEX_PROJECT")
         region = os.getenv("VERTEX_REGION", "us-central1")
+        serving_container_image_uri = os.getenv(
+            "VERTEX_SERVING_CONTAINER_IMAGE_URI",
+            "us-docker.pkg.dev/vertex-ai/prediction/onnxruntime-cpu.1-15:latest",
+        )
+        serving_container_predict_route = os.getenv("VERTEX_SERVING_CONTAINER_PREDICT_ROUTE", "/predict")
+        serving_container_health_route = os.getenv("VERTEX_SERVING_CONTAINER_HEALTH_ROUTE", "/health")
         display_name = f"{job.asset_spec.name}-{job.job_id}"
         if not project:
             raise ValueError("VERTEX_PROJECT must be set when VERTEX_ENABLE=true")
