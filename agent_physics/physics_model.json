@@ -1,0 +1,37 @@
+{
+  "model_version": "1.0",
+  "description": "Physics enforcement model for repo control-loop. Deterministic, review-gated.",
+  "variables": {
+    "curvature": {
+      "bounds": { "min": -1.0, "max": 1.0 },
+      "drift_threshold": 0.05
+    },
+    "entropy": {
+      "bounds": { "min": 0.0, "max": 1.0 },
+      "drift_threshold": 0.02
+    },
+    "invariant_mass": {
+      "bounds": { "min": 0.9, "max": 1.1 },
+      "drift_threshold": 0.01
+    }
+  },
+  "baseline_state": {
+    "curvature": 0.0,
+    "entropy": 0.10,
+    "invariant_mass": 1.0
+  },
+  "compiler": {
+    "generated_workflows": [
+      {
+        "file": "physics-enforcement.yml",
+        "name": "physics-enforcement",
+        "on": {
+          "pull_request": {
+            "types": ["opened", "synchronize", "reopened"]
+          }
+        }
+      }
+    ]
+  },
+  "history": []
+}

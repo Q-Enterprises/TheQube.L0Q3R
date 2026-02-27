@@ -1,0 +1,8 @@
+# Workflow compiler + generated workflows
+.github/workflows/* @compiler-team
+
+# Physics model + state
+agent_physics/* @physics-team
+
+# Scripts
+scripts/* @compiler-team
