@@ -266,9 +266,37 @@ class UnityMLOpsOrchestrator:
 
         project = os.getenv("VERTEX_PROJECT")
         region = os.getenv("VERTEX_REGION", "us-central1")
+        serving_container_image_uri = os.getenv(
+            "VERTEX_SERVING_CONTAINER_IMAGE_URI",
+            "us-docker.pkg.dev/vertex-ai/prediction/onnxruntime-cpu.1-15:latest",
+        )
+        serving_container_predict_route = os.getenv("VERTEX_SERVING_CONTAINER_PREDICT_ROUTE", "/predict")
+        serving_container_health_route = os.getenv("VERTEX_SERVING_CONTAINER_HEALTH_ROUTE", "/health")
         display_name = f"{job.asset_spec.name}-{job.job_id}"
         if not project:
             raise ValueError("VERTEX_PROJECT must be set when VERTEX_ENABLE=true")
+
+        if not serving_container_image_uri:
+            raise ValueError(
+                "VERTEX_SERVING_CONTAINER_IMAGE_URI must be set when VERTEX_ENABLE=true"
+            )
+        if not serving_container_predict_route:
+            raise ValueError(
+                "VERTEX_SERVING_CONTAINER_PREDICT_ROUTE must be set when VERTEX_ENABLE=true"
+            )
+        if not serving_container_health_route:
+            raise ValueError(
+                "VERTEX_SERVING_CONTAINER_HEALTH_ROUTE must be set when VERTEX_ENABLE=true"
+            )
+
+        model_suffix = pathlib.Path(model_path).suffix.lower()
+        if model_suffix == ".onnx" and "sklearn" in serving_container_image_uri.lower():
+            raise ValueError(
+                "Incompatible Vertex serving container for ONNX artifact: "
+                f"{serving_container_image_uri}. "
+                "Set VERTEX_SERVING_CONTAINER_IMAGE_URI to an ONNX runtime image "
+                "(for example us-docker.pkg.dev/vertex-ai/prediction/onnxruntime-cpu.1-15:latest)."
+            )
 
         try:
             from google.cloud import aiplatform  # type: ignore
@@ -280,7 +308,9 @@ class UnityMLOpsOrchestrator:
             model = aiplatform.Model.upload(
                 display_name=display_name,
                 artifact_uri=str(pathlib.Path(model_path).parent),
-                serving_container_image_uri="us-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.1-2:latest",
+                serving_container_image_uri=serving_container_image_uri,
+                serving_container_predict_route=serving_container_predict_route,
+                serving_container_health_route=serving_container_health_route,
             )
             return model.resource_name
 
