@@ -23,6 +23,8 @@ Install dependencies:
 pip install mlagents==1.0.0 pyyaml croniter
 ```
 
+> `pyyaml` is used to emit structured trainer configuration (including behavioral cloning blocks for demonstration data).
+
 Optional for Vertex AI registration:
 
 ```bash
@@ -86,6 +88,7 @@ python test.py
 | `VERTEX_ENABLE` | No | Set `true` to upload model to Vertex AI |
 | `VERTEX_PROJECT` | If Vertex enabled | GCP project id |
 | `VERTEX_REGION` | No | Vertex region (`us-central1` default) |
+| `VERTEX_SERVING_CONTAINER_IMAGE_URI` | If Vertex enabled | Serving container image URI compatible with ONNX artifacts |
 | `TRAINING_WEBHOOK_URL` | No | Webhook called on job completion |
 
 If Unity variables are not configured, the pipeline creates a mock build so local validation still works.
@@ -143,9 +146,10 @@ Suggested process:
 
 1. Collect demonstration trajectories in your Unity environment.
 2. Export demonstrations to your dataset storage.
-3. Set `offline_dataset_path` in `RLTrainingConfig`.
-4. Run scheduled jobs to retrain from datasets regularly.
-5. Optionally fine-tune online in simulation.
+3. Set `offline_dataset_path` in `RLTrainingConfig`. This is written into trainer YAML under `behavioral_cloning.demo_path`.
+4. If warm-starting from an existing ML-Agents run, set `initialize_from_run_id` separately.
+5. Run scheduled jobs to retrain from datasets regularly.
+6. Optionally fine-tune online in simulation.
 
 ## Production deployment notes
 
@@ -166,4 +170,4 @@ Suggested process:
 - `croniter is required`: install `croniter`.
 - `mlagents-learn not found`: install `mlagents` and ensure CLI in PATH.
 - Unity build not running: verify `UNITY_EXECUTABLE` and `UNITY_PROJECT_PATH`.
-- Vertex upload failing: check `VERTEX_ENABLE`, credentials, project, and region.
+- Vertex upload failing: check `VERTEX_ENABLE`, credentials, project, region, and `VERTEX_SERVING_CONTAINER_IMAGE_URI` for ONNX compatibility.
